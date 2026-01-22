@@ -205,7 +205,30 @@
             pointer-events: none;
             opacity: 0.7;
         }
-        
+
+        /* N4レベル対応：日本語+英語表示 */
+        .option-jp {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+
+        .option-en {
+            font-size: 12px;
+            color: #5B86E5;
+            font-style: italic;
+            line-height: 1.3;
+        }
+
+        .option-btn.correct .option-en {
+            color: #2e7d32;
+        }
+
+        .option-btn.incorrect .option-en {
+            color: #c62828;
+        }
+
         /* Result Screen */
         .result-card {
             text-align: center;
@@ -1678,32 +1701,54 @@
             }, 1000);
         }
         
+        // やさしい日本語に変換する関数（N4レベル対応）
+        function simplifyJapanese(text) {
+            if (!text) return '';
+            // 長い文章は最初の100文字+...に短縮
+            let simplified = text.length > 100 ? text.substring(0, 100) + '...' : text;
+            return simplified;
+        }
+
+        // 用語から英語の意味を取得
+        function getEnglishMeaning(meaningJP) {
+            const term = allTerms.find(t => t.meaningJP === meaningJP);
+            return term ? term.meaningEN : '';
+        }
+
         function showQuestion() {
             const term = currentQuiz.terms[currentQuiz.currentIndex];
             const total = currentQuiz.terms.length;
-            
-            document.getElementById('progressText').textContent = 
+
+            document.getElementById('progressText').textContent =
                 `問題 ${currentQuiz.currentIndex + 1} / ${total}`;
-            document.getElementById('progressBar').style.width = 
+            document.getElementById('progressBar').style.width =
                 `${((currentQuiz.currentIndex) / total) * 100}%`;
-            
+
             document.getElementById('questionTerm').textContent = term.term;
             document.getElementById('questionReading').textContent = term.reading;
-            
+
             // Generate options (1 correct + 4 wrong) - 5択形式（介護福祉士試験形式）
             const correctAnswer = term.meaningJP;
-            let wrongAnswers = allTerms
-                .filter(t => t.no !== term.no)
-                .map(t => t.meaningJP)
-                .filter(m => m && m !== correctAnswer);
+            const correctEnglish = term.meaningEN;
 
-            wrongAnswers = shuffleArray(wrongAnswers).slice(0, 4);
-            const options = shuffleArray([correctAnswer, ...wrongAnswers]);
-            
+            // 不正解の選択肢を取得（日本語と英語のペア）
+            let wrongOptions = allTerms
+                .filter(t => t.no !== term.no && t.meaningJP && t.meaningEN)
+                .map(t => ({ jp: t.meaningJP, en: t.meaningEN }));
+
+            wrongOptions = shuffleArray(wrongOptions).slice(0, 4);
+
+            // 正解と不正解を混ぜる
+            const allOptions = shuffleArray([
+                { jp: correctAnswer, en: correctEnglish },
+                ...wrongOptions
+            ]);
+
             const container = document.getElementById('optionsContainer');
-            container.innerHTML = options.map((opt, i) => `
-                <button class="option-btn" onclick="selectAnswer(this, '${escapeHtml(opt)}', '${escapeHtml(correctAnswer)}')">
-                    ${opt}
+            container.innerHTML = allOptions.map((opt, i) => `
+                <button class="option-btn" onclick="selectAnswer(this, '${escapeHtml(opt.jp)}', '${escapeHtml(correctAnswer)}')">
+                    <div class="option-jp">${simplifyJapanese(opt.jp)}</div>
+                    <div class="option-en">${opt.en || ''}</div>
                 </button>
             `).join('');
         }
