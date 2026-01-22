@@ -1,0 +1,1862 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>介護用語テスト / Care Terminology Quiz</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #5B86E5 0%, #36D1DC 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+        
+        .content {
+            padding: 25px;
+        }
+        
+        /* Setup Screen */
+        .setup-section {
+            margin-bottom: 20px;
+        }
+        
+        .setup-section label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .setup-section input,
+        .setup-section select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .setup-section input:focus,
+        .setup-section select:focus {
+            outline: none;
+            border-color: #5B86E5;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #5B86E5 0%, #36D1DC 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(91, 134, 229, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            margin-top: 10px;
+        }
+        
+        /* Quiz Screen */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .progress {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .timer {
+            background: #f8f9fa;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: #5B86E5;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #5B86E5, #36D1DC);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        
+        .question-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .question-label {
+            color: #888;
+            font-size: 0.85em;
+            margin-bottom: 10px;
+        }
+        
+        .question-term {
+            font-size: 2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .question-reading {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .option-btn {
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        
+        .option-btn:hover {
+            border-color: #5B86E5;
+            background: #f8f9ff;
+        }
+        
+        .option-btn.correct {
+            border-color: #4CAF50;
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .option-btn.incorrect {
+            border-color: #f44336;
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .option-btn.disabled {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        
+        /* Result Screen */
+        .result-card {
+            text-align: center;
+            padding: 30px 20px;
+        }
+        
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin: 0 auto 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .score-circle.pass {
+            background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+        }
+        
+        .score-circle.review {
+            background: linear-gradient(135deg, #FF9800 0%, #FFC107 100%);
+        }
+        
+        .score-circle.fail {
+            background: linear-gradient(135deg, #f44336 0%, #E91E63 100%);
+        }
+        
+        .score-number {
+            font-size: 3em;
+            line-height: 1;
+        }
+        
+        .score-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .result-status {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .result-status.pass { color: #4CAF50; }
+        .result-status.review { color: #FF9800; }
+        .result-status.fail { color: #f44336; }
+        
+        .result-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+        }
+        
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .stat-label {
+            font-size: 0.8em;
+            color: #666;
+        }
+        
+        .wrong-answers {
+            background: #fff3e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        .wrong-answers h3 {
+            color: #e65100;
+            margin-bottom: 15px;
+            font-size: 1em;
+        }
+        
+        .wrong-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #ffe0b2;
+        }
+        
+        .wrong-item:last-child {
+            border-bottom: none;
+        }
+        
+        .wrong-term {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .wrong-meaning {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 3px;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .sending-status {
+            text-align: center;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            color: #1976d2;
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.3em;
+            }
+            
+            .question-term {
+                font-size: 1.6em;
+            }
+            
+            .result-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 介護用語テスト</h1>
+            <p>Care Terminology Quiz for Filipino Learners</p>
+        </div>
+        
+        <div class="content">
+            <!-- Setup Screen -->
+            <div id="setupScreen">
+                <div class="setup-section">
+                    <label for="userName">👤 お名前 / Your Name</label>
+                    <input type="text" id="userName" placeholder="名前を入力してください">
+                </div>
+                
+                <div class="setup-section">
+                    <label for="weekSelect">📅 テストする週 / Select Week</label>
+                    <select id="weekSelect">
+                        <option value="1">Week 1: 基本・サービス (No.1-21)</option>
+                        <option value="2">Week 2: バイタル・排泄 (No.22-43)</option>
+                        <option value="3">Week 3: 入浴・清潔 (No.44-63)</option>
+                        <option value="4">Week 4: 身だしなみ・食事 (No.64-80)</option>
+                        <option value="5">Week 5: 服薬・移動 (No.81-98)</option>
+                        <option value="6">Week 6: 掃除・環境 (No.99-115)</option>
+                        <option value="7">Week 7: 洗濯・その他 (No.116-141)</option>
+                        <option value="all">全141問 / All 141 Terms</option>
+                    </select>
+                </div>
+                
+                <div class="setup-section">
+                    <label for="questionCount">❓ 問題数 / Number of Questions</label>
+                    <select id="questionCount">
+                        <option value="10">10問</option>
+                        <option value="15">15問</option>
+                        <option value="20" selected>20問</option>
+                        <option value="all">全問（その週の全用語）</option>
+                    </select>
+                </div>
+                
+                <button class="btn btn-primary" onclick="startQuiz()">
+                    🚀 テストを開始 / Start Quiz
+                </button>
+            </div>
+            
+            <!-- Quiz Screen -->
+            <div id="quizScreen" class="hidden">
+                <div class="quiz-header">
+                    <span class="progress" id="progressText">問題 1 / 20</span>
+                    <span class="timer" id="timer">00:00</span>
+                </div>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+                </div>
+                
+                <div class="question-card">
+                    <div class="question-label">この用語の意味は？ / What does this term mean?</div>
+                    <div class="question-term" id="questionTerm">用語</div>
+                    <div class="question-reading" id="questionReading">よみがな</div>
+                </div>
+                
+                <div class="options" id="optionsContainer">
+                    <!-- Options will be inserted here -->
+                </div>
+            </div>
+            
+            <!-- Result Screen -->
+            <div id="resultScreen" class="hidden">
+                <div class="result-card">
+                    <div class="score-circle" id="scoreCircle">
+                        <span class="score-number" id="scoreNumber">0%</span>
+                        <span class="score-label">正解率</span>
+                    </div>
+                    
+                    <div class="result-status" id="resultStatus">判定</div>
+                    
+                    <div class="result-stats">
+                        <div class="stat-item">
+                            <div class="stat-value" id="correctCount">0</div>
+                            <div class="stat-label">正解 / Correct</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalCount">0</div>
+                            <div class="stat-label">問題数 / Total</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="timeSpent">0:00</div>
+                            <div class="stat-label">所要時間 / Time</div>
+                        </div>
+                    </div>
+                    
+                    <div id="wrongAnswersSection" class="wrong-answers hidden">
+                        <h3>📝 復習が必要な用語 / Terms to Review</h3>
+                        <div id="wrongAnswersList"></div>
+                    </div>
+                    
+                    <div id="sendingStatus" class="sending-status hidden">
+                        📤 結果を送信中... / Sending results...
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="restartQuiz()">
+                        🔄 もう一度テスト / Try Again
+                    </button>
+                    <button class="btn btn-secondary" onclick="backToSetup()">
+                        ⬅️ 設定に戻る / Back to Setup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // All 141 care terminology items
+        const allTerms = [
+  {
+    "no": 1,
+    "term": "サービス実施",
+    "reading": "サービスじっし",
+    "english": "Service implementation",
+    "meaningJP": "さーびすを実際におこなうこと",
+    "meaningEN": "Actually performing/providing the care service."
+  },
+  {
+    "no": 2,
+    "term": "記録",
+    "reading": "きろく",
+    "english": "Record / Documentation",
+    "meaningJP": "かきのこすこと。書き記すこと。",
+    "meaningEN": "Writing down and documenting information."
+  },
+  {
+    "no": 3,
+    "term": "事業所名",
+    "reading": "じぎょうしょめい",
+    "english": "Office name / Facility name",
+    "meaningJP": "サービス提供など、事業が行われる場所のなまえ",
+    "meaningEN": "The name of the place where services are provided."
+  },
+  {
+    "no": 4,
+    "term": "指定訪問介護事業所",
+    "reading": "していほうもんかいごじぎょうしょ",
+    "english": "Designated home care service provider",
+    "meaningJP": "都道府県・市町村が、一定の要件を満たした事業者を、介護保険を利用した介護保険サービスを行うことができる事業者として指定をすることです。行政庁から指定を受けた事業者。",
+    "meaningEN": "A home care provider officially approved by the government to offer services covered by long-term care insurance."
+  },
+  {
+    "no": 5,
+    "term": "ライフサポートシルキー",
+    "reading": "らいふさぽーとしるきー",
+    "english": "Life Support Silky (company name)",
+    "meaningJP": "くまもとのじぎょうしょのなまえ　正式名称（株式会社　シルキー）",
+    "meaningEN": "Company name in Kumamoto. Official name: Silky Co., Ltd."
+  },
+  {
+    "no": 6,
+    "term": "利用者様氏名",
+    "reading": "りようしゃさましめい",
+    "english": "Client's name / User's name",
+    "meaningJP": "しめい＝なまえのこと",
+    "meaningEN": "The name of the person receiving care services."
+  },
+  {
+    "no": 7,
+    "term": "サービス提供者氏名",
+    "reading": "サービスていきょうしゃしめい",
+    "english": "Service provider's name",
+    "meaningJP": "さーびすを提供（ていきょう）する者のなまえ：利用者様の名前",
+    "meaningEN": "The name of the person providing care services."
+  },
+  {
+    "no": 8,
+    "term": "サービス利用日時",
+    "reading": "さーびすりようにちじ",
+    "english": "Date and time of service",
+    "meaningJP": "サービスをする時間（じかん）。サービスを実施（じっし）する時間",
+    "meaningEN": "The date and time when the service is provided."
+  },
+  {
+    "no": 9,
+    "term": "45750",
+    "reading": "",
+    "english": "Year format (Japanese calendar)",
+    "meaningJP": "西暦（せいれき）または令和7年と記名（めいき）する",
+    "meaningEN": "Write using Western calendar (e.g., 2025) or Japanese era (Reiwa 7)."
+  },
+  {
+    "no": 10,
+    "term": "月火水木金土日",
+    "reading": "げつ/か/すい/もく/きん/ど/にち",
+    "english": "Mon/Tue/Wed/Thu/Fri/Sat/Sun",
+    "meaningJP": "ようびはかけるようにしましょう",
+    "meaningEN": "Learn to write the days of the week."
+  },
+  {
+    "no": 11,
+    "term": "訪問介護",
+    "reading": "ほうもんかいご",
+    "english": "Home care service",
+    "meaningJP": "訪問介護は、介護の専門資格（せんもんしかく）を持つホームヘルパーが要介護者（ようかいご）の自宅を訪問し、日常生活を支える介護保険サービスです。この目的は、要介護者が自宅で自立した生活を送れるようサポートすることにあります。利用者の自立を促すため、できることは利用者自身で行い必要な部分だけサポートする...",
+    "meaningEN": "A care service where qualified home helpers visit the client's home to support daily living. The goal is to help clients live independently at home. The basic approach is to let clients do what they can themselves and only assist with what they need."
+  },
+  {
+    "no": 12,
+    "term": "身体介護",
+    "reading": "しんたいかいご",
+    "english": "Physical care / Personal care",
+    "meaningJP": "身体介護とは身体に直接（ちょくせつ）触れ（ふれ）ながら行う介助行為（かいじょこうい）のことです。その他にも身体介護として定義（ていぎ）づけられるものは以下（いか）のように厚生労働省（こうせいろうどうしょう）によって定（さだ）められていますが、基本的には「身体に直接触れながら行う介助行為」と認識（にん...",
+    "meaningEN": "Care that involves direct physical contact with the client. This includes: meal assistance, bathing assistance, toileting assistance, body wiping, dressing assistance, repositioning, transfer assistance, and medication assistance."
+  },
+  {
+    "no": 13,
+    "term": "生活援助",
+    "reading": "せいかつえんじょ",
+    "english": "Daily living assistance",
+    "meaningJP": "生活援助とは利用者が日常生活を送る上で必要な家事など、代わりに行える部分を肩代わりするサービスのことを言います。多くは訪問介護の分野で、身体介護を必要としないシーンで行われる事が多いです。具体的には以下のサービスが行われます。掃除/洗濯/ベッドメイク/衣服の整理・被服の補修/一般的な調理、配下膳/買...",
+    "meaningEN": "Services that help with household tasks the client cannot do alone. This includes: cleaning, laundry, bed making, clothing organization, cooking, serving meals, shopping, and picking up medication."
+  },
+  {
+    "no": 14,
+    "term": "同一建物",
+    "reading": "どういつたてもの",
+    "english": "Same building",
+    "meaningJP": "同じ建物",
+    "meaningEN": "The same building."
+  },
+  {
+    "no": 15,
+    "term": "減算",
+    "reading": "げんさん",
+    "english": "Deduction / Reduction",
+    "meaningJP": "減算⇔加算（かさん）",
+    "meaningEN": "Reduction in payment. Opposite of \"addition\" (加算)."
+  },
+  {
+    "no": 16,
+    "term": "介護保険",
+    "reading": "かいごほけん",
+    "english": "Long-term care insurance",
+    "meaningJP": "介護保険は、介護を必要とする人を社会全体で支えるためにつくられた制度です。介護保険制度は国が定めた範囲内のサービスしか利用できません。",
+    "meaningEN": "A system created to support people who need care through society. Services are limited to what the government allows."
+  },
+  {
+    "no": 17,
+    "term": "保険外",
+    "reading": "ほけんがい",
+    "english": "Outside insurance coverage",
+    "meaningJP": "利用者が自由にサービスを選ぶことができるが、全額自己負担となるため、利用者の経済的な負担が大きくなることがあります。",
+    "meaningEN": "Services not covered by insurance. Clients can choose freely but must pay the full cost themselves."
+  },
+  {
+    "no": 18,
+    "term": "加算",
+    "reading": "かさん",
+    "english": "Addition / Extra charge",
+    "meaningJP": "介護の加算とは、算定要件による人員の配置や提供するサービスなど、定められた要件を満たした際に算定できるもので、基本報酬に上乗せされます。一方で減算は、人員の欠如や、運営基準を満たしていない際に基本報酬から減算されます。介護報酬を算出する際は、「基本報酬＋加算－減算」の計算式を用います。",
+    "meaningEN": "Extra payment added to the basic fee when certain conditions are met, such as having qualified staff or providing special services."
+  },
+  {
+    "no": 19,
+    "term": "同行",
+    "reading": "どうこう",
+    "english": "Accompaniment",
+    "meaningJP": "一緒に連れたって行くこと。一緒に行くこと",
+    "meaningEN": "Going together with someone. Accompanying."
+  },
+  {
+    "no": 20,
+    "term": "研修",
+    "reading": "けんしゅう",
+    "english": "Training",
+    "meaningJP": "トレーニングのこと",
+    "meaningEN": "Training."
+  },
+  {
+    "no": 21,
+    "term": "サービス提供責任者",
+    "reading": "さーびすていきょうせきにんしゃ",
+    "english": "Service manager / Care coordinator",
+    "meaningJP": "サービス提供責任者はサ責とも呼ばれ、訪問介護事業所の利用者のために、ケアマネジャーやヘルパーとの関係をつなぎ、介護サービスの計画を立てる役割を持っています。",
+    "meaningEN": "Also called \"Sa-seki.\" A person who coordinates between care managers and helpers, and plans care services for home care clients."
+  },
+  {
+    "no": 22,
+    "term": "バイタルチェック",
+    "reading": "ばいたるちぇっく",
+    "english": "Vital signs check",
+    "meaningJP": "体温、血圧、脈拍などを測定し、健康状態を確認することをいう。",
+    "meaningEN": "Measuring body temperature, blood pressure, pulse, etc. to check health condition."
+  },
+  {
+    "no": 23,
+    "term": "血圧",
+    "reading": "けつあつ",
+    "english": "Blood pressure",
+    "meaningJP": "血液が心臓から体中に送り出される際の圧力を表す指標です。血圧は“上の血圧”である収縮期血圧と、“下の血圧”である拡張期血圧で表記されます。血圧が適切な数値に保たれていることによって、血液が体中の臓器にしっかりと送られていることを示します。",
+    "meaningEN": "The pressure of blood being pumped from the heart throughout the body. Shown as upper (systolic) and lower (diastolic) numbers. Normal blood pressure means blood is properly reaching all organs."
+  },
+  {
+    "no": 24,
+    "term": "脈拍",
+    "reading": "みゃくはく",
+    "english": "Pulse",
+    "meaningJP": "脈拍数は性別・年齢別によって正常値が若干異なってきますが、通常は一般成人で６０～１００拍／分を基準値としています。男性と女性を比較した場合、男性より女性の方が心拍数は多い傾向にあります。個人差はありますが成人男性の心拍数は1分間に６５～７０拍。成人女性の心拍数は1分間に７０～８０拍といわれています。...",
+    "meaningEN": "Normal range is 60-100 beats per minute for adults. Women tend to have slightly higher rates than men. Over 100 bpm is called tachycardia (fast pulse). Under 60 bpm is called bradycardia (slow pulse)."
+  },
+  {
+    "no": 25,
+    "term": "体温",
+    "reading": "たいおん",
+    "english": "Body temperature",
+    "meaningJP": "体温は基本は腋下（えきか）で測定します。　腋下：わきの下のこと",
+    "meaningEN": "Body temperature. Usually measured under the armpit (axillary temperature)."
+  },
+  {
+    "no": 26,
+    "term": "トイレ誘導",
+    "reading": "といれゆうどう",
+    "english": "Toilet guidance",
+    "meaningJP": "トイレの誘い導くこと。連れていくこと",
+    "meaningEN": "Guiding and leading someone to the toilet."
+  },
+  {
+    "no": 27,
+    "term": "トイレ促し",
+    "reading": "といれうながし",
+    "english": "Encouraging toilet use",
+    "meaningJP": "促す（うながす）とは、「人に行動するようにと催促する・後押しする・急がせる」あるいは「物事の進行・変化・発展が速やかに（あるいは円滑に）行われるように補助する」といった意味で用いられる。",
+    "meaningEN": "Encouraging or reminding someone to use the toilet. \"Urge\" means to encourage someone to take action or help things proceed smoothly."
+  },
+  {
+    "no": 28,
+    "term": "排泄介助",
+    "reading": "はいせつかいじょ",
+    "english": "Toileting assistance",
+    "meaningJP": "排せつ介助は、排せつ行為やその動作が困難な方に対して行います。介護士は排せつのお手伝いや排せつ物の処理だけでなく、排せつ物の状態から介護者の健康状態も確認したりします。排せつ介助に対して抵抗のある介護者も少なくないので、人としての尊厳を損なわないようプライバシーに注意しながら介助することが重要です。...",
+    "meaningEN": "Assisting people who have difficulty with toileting. Caregivers help with the process and also check the condition of waste to monitor health. Privacy must be protected as many people feel embarrassed about this."
+  },
+  {
+    "no": 29,
+    "term": "トイレ",
+    "reading": "といれ",
+    "english": "Toilet",
+    "meaningJP": "基本、各部屋にトイレまたはPトイレがあります。必ずサービス時に確認します。流し忘れ、尿、便の状態で健康観察する。",
+    "meaningEN": "Each room usually has a toilet or portable toilet. Always check during service. Observe health by checking if toilet is flushed and condition of urine/stool."
+  },
+  {
+    "no": 30,
+    "term": "Pトイレ",
+    "reading": "ぴーといれ",
+    "english": "Portable toilet",
+    "meaningJP": "ポータブルトイレ。歩行困難な方が室内で使用するトイレ。",
+    "meaningEN": "Portable toilet. A toilet used in the room by people who have difficulty walking."
+  },
+  {
+    "no": 31,
+    "term": "尿器",
+    "reading": "にょうき",
+    "english": "Urinal",
+    "meaningJP": "Urinal　起き上がれない方が尿意を訴えてきた時に尿をとる瓶。手術後に病院で利用することが頻度として多い。尿意を伝えれない方がパットやリハパンやオムツを使用する。",
+    "meaningEN": "Urinal. A container for collecting urine from people who cannot get up. Often used in hospitals after surgery. People who cannot communicate the need to urinate use pads, rehabilitation pants, or diapers."
+  },
+  {
+    "no": 32,
+    "term": "排尿",
+    "reading": "はいにょう",
+    "english": "Urination",
+    "meaningJP": "尿を放出すること。",
+    "meaningEN": "Releasing urine. Urinating."
+  },
+  {
+    "no": 33,
+    "term": "排便",
+    "reading": "はいべん",
+    "english": "Bowel movement",
+    "meaningJP": "便を排出すること。",
+    "meaningEN": "Releasing stool. Defecating."
+  },
+  {
+    "no": 34,
+    "term": "有り",
+    "reading": "あり",
+    "english": "Yes / Present",
+    "meaningJP": "有り（あり）の反対語は無し",
+    "meaningEN": "Present / Yes. Opposite of \"none\" (無し)."
+  },
+  {
+    "no": 35,
+    "term": "無し",
+    "reading": "なし",
+    "english": "No / None",
+    "meaningJP": "",
+    "meaningEN": "None / No."
+  },
+  {
+    "no": 36,
+    "term": "おむつ",
+    "reading": "",
+    "english": "Diaper",
+    "meaningJP": "diaper　立位が取れない方がオムツを利用することが基本。",
+    "meaningEN": "Diaper. Basically used by people who cannot stand."
+  },
+  {
+    "no": 37,
+    "term": "Rパンツ",
+    "reading": "りはぱん",
+    "english": "Rehabilitation pants / Pull-up diaper",
+    "meaningJP": "リハビリパンツ。　はく紙のパンツ。失禁（しっきん）：自分の意思とは関係なく尿が漏れる状態。",
+    "meaningEN": "Rehabilitation pants. Pull-up style paper underwear. Incontinence means involuntary leakage of urine."
+  },
+  {
+    "no": 38,
+    "term": "交換",
+    "reading": "こうかん",
+    "english": "Change / Replacement",
+    "meaningJP": "とりかえること",
+    "meaningEN": "Replacing with something new."
+  },
+  {
+    "no": 39,
+    "term": "おむつ交換",
+    "reading": "おむつこうかん",
+    "english": "Diaper change",
+    "meaningJP": "おむつを新しいものとかえること",
+    "meaningEN": "Changing the diaper to a new one."
+  },
+  {
+    "no": 40,
+    "term": "おむつ確認",
+    "reading": "おむつかくにん",
+    "english": "Diaper check",
+    "meaningJP": "おむつの交換が必要か確認すること。失禁していないか汚れていたいかの確認。失禁には尿失禁、便失禁があります。小失禁には5つの種類があります。①腹圧性尿失禁②切迫性尿失禁③溢流性尿失禁④機能性尿失禁⑤反射性尿失禁　便失禁の原因には①溜められないためにもれる：切迫性便失禁　②たまりすぎて出せないためにおこ...",
+    "meaningEN": "Checking if the diaper needs to be changed. Checking for incontinence or soiling. There are different types of urinary and fecal incontinence."
+  },
+  {
+    "no": 41,
+    "term": "保清",
+    "reading": "ほせい",
+    "english": "Maintaining cleanliness",
+    "meaningJP": "きれいなままを保つこと",
+    "meaningEN": "Keeping clean."
+  },
+  {
+    "no": 42,
+    "term": "尿パット交換",
+    "reading": "にょうぱっとこうかん",
+    "english": "Urine pad change",
+    "meaningJP": "おむつまたはリハパンの下にあてるパット。",
+    "meaningEN": "A pad placed inside the diaper or rehabilitation pants."
+  },
+  {
+    "no": 43,
+    "term": "尿パット装着",
+    "reading": "にょうぱっとそうちゃく",
+    "english": "Urine pad application",
+    "meaningJP": "装着：身に着けること。取り付けること。",
+    "meaningEN": "Putting on / attaching something. Installing."
+  },
+  {
+    "no": 44,
+    "term": "入浴介助",
+    "reading": "にゅうよくかいじょ",
+    "english": "Bathing assistance",
+    "meaningJP": "入浴介助とは、自力で入浴することが困難な方をサポートすることです。入浴時は転倒などの事故が発生しやすいので声掛けを行い、目を離さないことが大切です。入浴が困難な場合には、シャワーチェアや入浴専用ベルトなどの福祉用具を使用することもあります。入浴介助で行われるサービスは以下の通りです。入浴の準備/衣類...",
+    "meaningEN": "Assisting people who have difficulty bathing alone. Falls are common during bathing, so always call out and never take your eyes off the person. Special equipment like shower chairs may be used."
+  },
+  {
+    "no": 45,
+    "term": "全身浴",
+    "reading": "ぜんしんよく",
+    "english": "Full body bath",
+    "meaningJP": "全身湯につかること。浴槽の中に入ること。",
+    "meaningEN": "Soaking the whole body in the bathtub."
+  },
+  {
+    "no": 46,
+    "term": "シャワー浴",
+    "reading": "しゃわーよく",
+    "english": "Shower bath",
+    "meaningJP": "洗身し、シャワーでながし、浴槽に入らないこと",
+    "meaningEN": "Washing the body with shower and rinsing, without getting in the bathtub."
+  },
+  {
+    "no": 47,
+    "term": "手浴",
+    "reading": "しゅよく",
+    "english": "Hand bath",
+    "meaningJP": "手浴は温かいお湯で手を洗うこと",
+    "meaningEN": "Washing hands with warm water."
+  },
+  {
+    "no": 48,
+    "term": "足浴",
+    "reading": "そくよく",
+    "english": "Foot bath",
+    "meaningJP": "足浴とは、温めながら足を洗浄するケアのことで、身体の一部分だけをお湯につけて洗う部分浴のひとつです。手浴と足浴の目的は以下の通りです:\n手足を清潔に保つ\n水虫などの感染症予防\n褥瘡（じょくそう）予防\n爪がやわらかく切りやすくなる\n血行促進\nむくみ予防\n鎮痛効果\n入眠促進\n\n\n手浴・足浴は手足の心臓へ...",
+    "meaningEN": "A partial bath where feet are soaked in warm water and washed. Benefits include: keeping hands/feet clean, preventing infections like athlete's foot, preventing bedsores, softening nails for easier cutting, improving blood circulation, preventing swelling, pain relief, and promoting sleep."
+  },
+  {
+    "no": 49,
+    "term": "洗髪",
+    "reading": "せんぱつ",
+    "english": "Hair washing",
+    "meaningJP": "髪を洗うこと",
+    "meaningEN": "Washing the hair."
+  },
+  {
+    "no": 50,
+    "term": "耳掃除",
+    "reading": "みみそうじ",
+    "english": "Ear cleaning",
+    "meaningJP": "耳をそうじすること",
+    "meaningEN": "Cleaning the ears."
+  },
+  {
+    "no": 51,
+    "term": "爪切り",
+    "reading": "つめきり",
+    "english": "Nail cutting",
+    "meaningJP": "爪を切ってあげること",
+    "meaningEN": "Cutting the nails."
+  },
+  {
+    "no": 52,
+    "term": "陰部洗浄",
+    "reading": "いんぶせんじょう",
+    "english": "Perineal care",
+    "meaningJP": "入浴ができない患者さんやおむつを装着している患者さんを対象に、陰部を清潔に保つために洗浄します。日ごろはなかなかできない陰部をしっかりと観察できるよい機会です。失禁に伴う皮膚炎（失禁関連皮膚炎：IAD）など、皮膚トラブルの有無をよく確認しましょう。陰部は、汚れを落とすため洗浄剤（石鹸など）を使用して...",
+    "meaningEN": "Washing the genital area to keep it clean for patients who cannot bathe or wear diapers. Use soap and warm water (38-39°C). Dry thoroughly to prevent skin problems. Pay attention to hidden areas like groin and folds."
+  },
+  {
+    "no": 53,
+    "term": "臀部洗浄",
+    "reading": "でんぶせんじょう",
+    "english": "Buttock washing",
+    "meaningJP": "お湯をかけて泡を洗い流す/水分をタオルで拭き取る/側臥位にする/目に見える臀部の汚れをティッシュペーパーなどで拭き取る/ガーゼを濡らして石鹸で泡立て、陰部や臀部を洗う/洗う際は、洗う箇所を変えるたびにガーゼの面も変える/肛門を洗った場合は、肛門を洗ったあとはガーゼを捨て、新しいガーゼを使う/陰部や臀...",
+    "meaningEN": "Washing the buttocks. Rinse with water, dry with towel, position on side, wipe visible dirt, wash with soapy gauze, change gauze for different areas, rinse with warm water (around 39°C as elderly skin is sensitive)."
+  },
+  {
+    "no": 54,
+    "term": "清拭",
+    "reading": "せいしき",
+    "english": "Bed bath / Body wiping",
+    "meaningJP": "清拭は、主にケガや病気で要介護状態になり入浴が難しい場合に実践します。蒸しタオルなどで体を拭く行為です。介護施設では、体調不良などの理由で入浴が難しい場合にも清拭をすることがあります。",
+    "meaningEN": "Wiping the body with warm towels. Done mainly when injury or illness makes bathing difficult. Also done in care facilities when someone is not well enough to bathe."
+  },
+  {
+    "no": 55,
+    "term": "全身清拭",
+    "reading": "ぜんしんせいしき",
+    "english": "Full body wipe",
+    "meaningJP": "清拭は、体を清潔な状態に保つためにする介助で「せいしき」と読みます。温かいタオルを使い、要介護者の体を綺麗に拭いていきます。体の汚れを綺麗にするためには、入浴するのが最も効果的です。しかし、体調不良などの理由で入浴できなかった場合は、体の汚れを落とせなくなってしまいます。そのような場合に自宅で清拭を...",
+    "meaningEN": "Wiping the entire body with warm towels to keep it clean. Done when bathing is not possible due to poor health. Benefits include cleanliness, relaxation, improved metabolism, waste removal, better blood circulation, and prevention of contractures and bedsores."
+  },
+  {
+    "no": 56,
+    "term": "顔",
+    "reading": "かお",
+    "english": "Face",
+    "meaningJP": "face",
+    "meaningEN": "Face."
+  },
+  {
+    "no": 57,
+    "term": "手浴",
+    "reading": "しゅよく",
+    "english": "Hand bath",
+    "meaningJP": "温かいお湯で手を洗うことで、手の血行を良くすると共に、清潔を保持します。血行が良くなることで入眠促進・リラクゼーション効果があります。また、温めるこで間接が動きやすくなり、高齢者や麻痺のある方の場合はリハビリ効果もあります。",
+    "meaningEN": "Washing hands with warm water."
+  },
+  {
+    "no": 58,
+    "term": "首",
+    "reading": "くび",
+    "english": "Neck",
+    "meaningJP": "neck",
+    "meaningEN": "Neck."
+  },
+  {
+    "no": 59,
+    "term": "頭",
+    "reading": "あたま",
+    "english": "Head",
+    "meaningJP": "Head",
+    "meaningEN": "Head."
+  },
+  {
+    "no": 60,
+    "term": "他",
+    "reading": "ほか",
+    "english": "Other",
+    "meaningJP": "others",
+    "meaningEN": "Other."
+  },
+  {
+    "no": 61,
+    "term": "洗面",
+    "reading": "せんめん",
+    "english": "Face washing",
+    "meaningJP": "Washbasin",
+    "meaningEN": "Washing the face."
+  },
+  {
+    "no": 62,
+    "term": "口腔",
+    "reading": "こうくう",
+    "english": "Oral cavity",
+    "meaningJP": "oral",
+    "meaningEN": "The inside of the mouth."
+  },
+  {
+    "no": 63,
+    "term": "口腔ケア",
+    "reading": "こうくうけあ",
+    "english": "Oral care",
+    "meaningJP": "Oral　care　口腔内を清潔にすることで虫歯や歯周病予防だけでなく患者さんの心身の健康をサポートすることを目的に行われます。",
+    "meaningEN": "Cleaning and caring for the mouth."
+  },
+  {
+    "no": 64,
+    "term": "整髪",
+    "reading": "せいはつ",
+    "english": "Hair grooming",
+    "meaningJP": "乱れた髪を整えること",
+    "meaningEN": "Grooming and arranging the hair."
+  },
+  {
+    "no": 65,
+    "term": "髭剃り",
+    "reading": "ひげそり",
+    "english": "Shaving",
+    "meaningJP": "shaving",
+    "meaningEN": "Shaving facial hair."
+  },
+  {
+    "no": 66,
+    "term": "衣服",
+    "reading": "いふく",
+    "english": "Clothes",
+    "meaningJP": "clothes",
+    "meaningEN": "Clothes / Clothing."
+  },
+  {
+    "no": 67,
+    "term": "着脱",
+    "reading": "ちゃくだつ",
+    "english": "Dressing/undressing",
+    "meaningJP": "着たり脱いだりすること",
+    "meaningEN": "Putting on and taking off clothes."
+  },
+  {
+    "no": 68,
+    "term": "衣服更衣",
+    "reading": "いふくこうい",
+    "english": "Changing clothes",
+    "meaningJP": "自力で衣服の着脱が難しい方に対して行います。寝ている間に多くの汗をかくので、こまめな着替えを行います。着替えの動作は、身体機能の低下に繋がるのでできない部分のみサポートします。",
+    "meaningEN": "Changing clothes."
+  },
+  {
+    "no": 69,
+    "term": "食事介助",
+    "reading": "しょくじかいじょ",
+    "english": "Meal assistance",
+    "meaningJP": "食事介助とは、ひとりでうまく食事ができない方のために介助を行うことを言います。食事介助には、摂食介助だけでなく、利用者の食前・食事・食後の食事環境をサポートすることまで含まれています。また、楽しく食事できるように声掛けを行うことも介護士の重要な役割です。",
+    "meaningEN": "Assisting with meals."
+  },
+  {
+    "no": 70,
+    "term": "食事一部介助",
+    "reading": "しょくじいちぶかいじょ",
+    "english": "Partial meal assistance",
+    "meaningJP": "一部介助 の場合は、食べやすい大きさに切り、スプーンに一口量をすくい手渡しを行ったり、手を添えたりするなど、患者さんができない部分を補助します。 食事の順番は患者さんの希望を聞きながら行い、主菜、副菜を交互にバランスよく摂取できるようにしましょう。 食後は患者さんの摂取量を確認し、下膳します。",
+    "meaningEN": "Partially assisting with meals (client does some eating independently)."
+  },
+  {
+    "no": 71,
+    "term": "食事全介助",
+    "reading": "しょくじぜんかいじょ",
+    "english": "Full meal assistance",
+    "meaningJP": "全介助は、介護者がすべて行うことです。\n半介助は、生活に必要な動作を本人と介助者のサポートによって行うことです。\n一部介助は、見守りや誘導です。\n食事介助において、全介助は、利用者が自力摂取することが困難であるため、介護者が全ての介助を行うことです。\n一部介助は、誤嚥等が無いように見守りや声掛けを行...",
+    "meaningEN": "Fully assisting with meals (client needs complete help)."
+  },
+  {
+    "no": 72,
+    "term": "完食",
+    "reading": "かんしょく",
+    "english": "Finished meal completely",
+    "meaningJP": "全量摂取できること",
+    "meaningEN": "Eating all the food completely."
+  },
+  {
+    "no": 73,
+    "term": "残食",
+    "reading": "ざんしょく",
+    "english": "Left food unfinished",
+    "meaningJP": "食べることのできなかった残り。",
+    "meaningEN": "Leaving food uneaten."
+  },
+  {
+    "no": 74,
+    "term": "（　2割）摂取",
+    "reading": "（　2わり）せっしゅ",
+    "english": "(20%) intake",
+    "meaningJP": "摂取できた割合",
+    "meaningEN": "Consumed (20%) of the meal. Used to record how much was eaten."
+  },
+  {
+    "no": 75,
+    "term": "水分補給　　㏄",
+    "reading": "すいぶんほきゅう",
+    "english": "Hydration (cc/ml)",
+    "meaningJP": "「補給」というのは、主にエネルギーや栄養などを補うことを意味します。※「補給」と「補充」はどちらも「足りない分を補うこと」という共通の意味合いを持っていますが、「補給」という言葉は「必要性や要求に応答して不足している分を補うこと」を意味しています。",
+    "meaningEN": "Providing water/fluids. Record amount in cc (ml)."
+  },
+  {
+    "no": 76,
+    "term": "服薬介助",
+    "reading": "ふくやくかいじょ",
+    "english": "Medication assistance",
+    "meaningJP": "Medication assistance",
+    "meaningEN": "Assisting with taking medication."
+  },
+  {
+    "no": 77,
+    "term": "内服介助",
+    "reading": "ないふくかいじょ",
+    "english": "Oral medication assistance",
+    "meaningJP": "介護士ができる介助は、一包化された薬の準備、服薬の声掛け、飲み残しがないかの確認をして利用者さまが薬を正しく飲めるようお手伝いをすることです。",
+    "meaningEN": "Assisting with oral medication (medicine taken by mouth)."
+  },
+  {
+    "no": 78,
+    "term": "点眼",
+    "reading": "てんがん",
+    "english": "Eye drops",
+    "meaningJP": "Eye drops",
+    "meaningEN": "Applying eye drops."
+  },
+  {
+    "no": 79,
+    "term": "貼付介助",
+    "reading": "ちょうふかいじょ",
+    "english": "Patch application",
+    "meaningJP": "湿布などを張る介助　　貼付薬（皮膚に張りつける薬）",
+    "meaningEN": "Assisting with applying patches (like pain relief patches)."
+  },
+  {
+    "no": 80,
+    "term": "塗付介助",
+    "reading": "とふかいじょ",
+    "english": "Ointment application",
+    "meaningJP": "薬などを一面に塗りつけること。",
+    "meaningEN": "Assisting with applying ointments or creams."
+  },
+  {
+    "no": 81,
+    "term": "吸入",
+    "reading": "きゅうにゅう",
+    "english": "Inhalation",
+    "meaningJP": "吸い込むこと。特に治療などのため，気体や噴霧状にした薬を吸い込むこと。\n\"酸素きゅうにゅう\"",
+    "meaningEN": "Inhaling medication (like asthma inhalers)."
+  },
+  {
+    "no": 82,
+    "term": "点耳",
+    "reading": "てんじ",
+    "english": "Ear drops",
+    "meaningJP": "医師の指導に従って分泌物をよく取ってください。\n点耳する前は手を洗ってください。\n手のひらで容器を握って数分容器を温めてください。\n（冷たいまま点耳すると「めまい」をおこすことがあります）\n点耳する方の耳を上にして、横向きに寝てください。\n耳たぶを後ろに引っぱるようにして、点耳液を６～10滴（ステロ...",
+    "meaningEN": "Applying ear drops."
+  },
+  {
+    "no": 83,
+    "term": "点鼻",
+    "reading": "てんび",
+    "english": "Nasal drops",
+    "meaningJP": "点鼻薬は、鼻炎やアレルギー、風邪の症状などの鼻の問題を治療するために用いられる外用薬です。これらは通常、液体またはスプレー形式で提供され、直接鼻腔内に投与されます。点鼻薬には、抗ヒスタミン剤、抗アレルギー薬、血管収縮剤、ステロイドなどがあります。　　　　　　　　　　　　　　　　　　　　　　　　　　　...",
+    "meaningEN": "Applying nasal drops."
+  },
+  {
+    "no": 84,
+    "term": "服薬確認",
+    "reading": "ふくやくかくにん",
+    "english": "Medication confirmation",
+    "meaningJP": "服薬確認のポイントは以下の通りです：\n職員同士、あるいは利用者と「名前・日付・時間」を読み上げ確認する。\n服薬介助は1人ずつ行う。\n服薬後は、口腔内に残ってないか、呑み込めず喉に引っかかってないかを確認する。\n衣服や床などに落薬がないかもチェックし、薬の袋も空になっていることを確認する。\n終了後は、...",
+    "meaningEN": "Confirming that medication was taken correctly."
+  },
+  {
+    "no": 85,
+    "term": "移動介助",
+    "reading": "いどうかいじょ",
+    "english": "Mobility assistance",
+    "meaningJP": "移乗介助は身体介護の基本であり、介護職だけでなく、自宅で家族の介護をする人にとっても重要な介助スキルです。力任せに行うと身体に負荷がかかり、事故につながる恐れもあるため、移乗介助は正しい方法で実施しましょう。",
+    "meaningEN": "Assisting with moving/walking."
+  },
+  {
+    "no": 86,
+    "term": "体位",
+    "reading": "たいい",
+    "english": "Body position",
+    "meaningJP": "医療、看護、介護領域の体位（たいい）は、体の位置や姿勢のことを指す。",
+    "meaningEN": "Body position/posture."
+  },
+  {
+    "no": 87,
+    "term": "変換",
+    "reading": "へんかん",
+    "english": "Change",
+    "meaningJP": "入れ変わること。また、変えること。",
+    "meaningEN": "Changing / Converting."
+  },
+  {
+    "no": 88,
+    "term": "体位変換",
+    "reading": "たいいへんかん",
+    "english": "Position change / Repositioning",
+    "meaningJP": "身体の位置や姿勢のことです。例えば立つ、座る、寝るや、その際に膝を伸ばすか曲げるか、あるいは体を捻るかどうか、といった違いによってそれを区別する。介護看護では褥瘡の防止のために、一定時間以上同じ体位をとりつづけさせないよう、体位変換を適宜行うことが重要である。",
+    "meaningEN": "Changing body position. Helping turn over in bed to prevent bedsores and improve blood circulation."
+  },
+  {
+    "no": 89,
+    "term": "移乗介助",
+    "reading": "いじょうかいじょ",
+    "english": "Transfer assistance",
+    "meaningJP": "移乗介助の注意点4つ\n利用者さんの表情を確認しながら行う\n実施前にご利用者様の情報を確認しておく\n必ず声掛けをする",
+    "meaningEN": "Assisting with transfers (e.g., from bed to wheelchair, wheelchair to toilet)."
+  },
+  {
+    "no": 90,
+    "term": "外出介助",
+    "reading": "がいしゅつかいじょ",
+    "english": "Going out assistance",
+    "meaningJP": "外出介助とは主に訪問介護で行われるサービスで、一人で通所（デイサービス）や通院、気分転換のための外出などができない人のために外出の手助けをすることを言い、車椅子への移乗やトイレ介助、付添いなども外出介助に含まれます。お花見や音楽鑑賞などのイベントごとにも、付き添って介助を行います。\n\nデイサービスや...",
+    "meaningEN": "Assisting with going outside."
+  },
+  {
+    "no": 91,
+    "term": "買物",
+    "reading": "かいもの",
+    "english": "Shopping",
+    "meaningJP": "ショッピング",
+    "meaningEN": "Shopping."
+  },
+  {
+    "no": 92,
+    "term": "通院",
+    "reading": "つういん",
+    "english": "Hospital visit",
+    "meaningJP": "病院に通うこと",
+    "meaningEN": "Going to the hospital/clinic for medical visits."
+  },
+  {
+    "no": 93,
+    "term": "その他",
+    "reading": "そのた",
+    "english": "Other",
+    "meaningJP": "それ以外のもの、また、それ以外のこと。",
+    "meaningEN": "Other."
+  },
+  {
+    "no": 94,
+    "term": "調理",
+    "reading": "ちょうり",
+    "english": "Cooking",
+    "meaningJP": "クッキング　漢字で覚える",
+    "meaningEN": "Cooking / Preparing food."
+  },
+  {
+    "no": 95,
+    "term": "配膳",
+    "reading": "はいぜん",
+    "english": "Serving food",
+    "meaningJP": "食事をはこぶこと。配ること",
+    "meaningEN": "Setting the table / Serving food."
+  },
+  {
+    "no": 96,
+    "term": "下膳",
+    "reading": "げぜん",
+    "english": "Clearing the table",
+    "meaningJP": "食事をお部屋に下げにいくこと",
+    "meaningEN": "Clearing dishes after a meal."
+  },
+  {
+    "no": 97,
+    "term": "後片付け",
+    "reading": "あとかたづけ",
+    "english": "Cleaning up",
+    "meaningJP": "片づけること。シルキーでは、サービスで居室に入った際に、必ず回りを見渡し整備することを心がける。",
+    "meaningEN": "Cleaning up after use."
+  },
+  {
+    "no": 98,
+    "term": "換気",
+    "reading": "かんき",
+    "english": "Ventilation",
+    "meaningJP": "空気の入れ替えをすること。ご高齢の方が過ごされている場所では、急激な温度変化で体調を崩す場合があり、換気方法を配慮する必要があります。一方向の窓を少し開け常時換気を行うと、室温の変化を抑えることができます。空気は温かい場所から冷たい場所へ流れる性質を持っているため、少しずつ空気が入れ替わることで、比...",
+    "meaningEN": "Replacing air / Ventilating the room."
+  },
+  {
+    "no": 99,
+    "term": "環境",
+    "reading": "かんきょう",
+    "english": "Environment",
+    "meaningJP": "environment",
+    "meaningEN": "Environment / Surroundings."
+  },
+  {
+    "no": 100,
+    "term": "整備",
+    "reading": "せいび",
+    "english": "Maintenance",
+    "meaningJP": "Maintenance",
+    "meaningEN": "Maintenance / Preparation."
+  },
+  {
+    "no": 101,
+    "term": "環境整備",
+    "reading": "かんきょうせいび",
+    "english": "Environment maintenance",
+    "meaningJP": "環境整備とは、特定の環境や場所を整えて、その利用効率を高めたり、居心地を良くしたりすることを指します。",
+    "meaningEN": "Maintaining and organizing the living environment."
+  },
+  {
+    "no": 102,
+    "term": "義歯",
+    "reading": "ぎし",
+    "english": "Dentures",
+    "meaningJP": "入れ歯のこと",
+    "meaningEN": "Dentures / False teeth."
+  },
+  {
+    "no": 103,
+    "term": "洗浄",
+    "reading": "せんじょう",
+    "english": "Washing / Cleaning",
+    "meaningJP": "あらうこと",
+    "meaningEN": "Washing / Cleaning."
+  },
+  {
+    "no": 104,
+    "term": "義歯洗浄",
+    "reading": "ぎしせんじょう",
+    "english": "Denture cleaning",
+    "meaningJP": "入れ歯をあらうこと",
+    "meaningEN": "Cleaning the dentures."
+  },
+  {
+    "no": 105,
+    "term": "義歯浸置き",
+    "reading": "ぎしつけおき",
+    "english": "Denture soaking",
+    "meaningJP": "義歯専用の消毒液に洗った後につけて保管すること",
+    "meaningEN": "Soaking dentures (in cleaning solution overnight)."
+  },
+  {
+    "no": 106,
+    "term": "清掃",
+    "reading": "せいそう",
+    "english": "Cleaning",
+    "meaningJP": "掃除（そうじ）をすること",
+    "meaningEN": "Cleaning."
+  },
+  {
+    "no": 107,
+    "term": "居室",
+    "reading": "きょしつ",
+    "english": "Living room",
+    "meaningJP": "リビングルーム",
+    "meaningEN": "Living room / The resident's room."
+  },
+  {
+    "no": 108,
+    "term": "寝室",
+    "reading": "しんしつ",
+    "english": "Bedroom",
+    "meaningJP": "睡眠をとる部屋。シルキーの場合はワンルームのため、生活空間は寝室と同じとなります。",
+    "meaningEN": "Bedroom."
+  },
+  {
+    "no": 109,
+    "term": "玄関",
+    "reading": "げんかん",
+    "english": "Entrance",
+    "meaningJP": "エントランス",
+    "meaningEN": "Entrance / Front door area."
+  },
+  {
+    "no": 110,
+    "term": "台所",
+    "reading": "だいどころ",
+    "english": "Kitchen",
+    "meaningJP": "キッチン",
+    "meaningEN": "Kitchen."
+  },
+  {
+    "no": 111,
+    "term": "風呂",
+    "reading": "ふろ",
+    "english": "Bath / Bathroom",
+    "meaningJP": "bathのこと",
+    "meaningEN": "Bath / Bathroom."
+  },
+  {
+    "no": 112,
+    "term": "洗面所",
+    "reading": "せんめんじょ",
+    "english": "Washroom",
+    "meaningJP": "Washroom",
+    "meaningEN": "Washroom / Bathroom sink area."
+  },
+  {
+    "no": 113,
+    "term": "ゴミ収集",
+    "reading": "ごみしゅうしゅう",
+    "english": "Garbage collection",
+    "meaningJP": "ゴミを集めること（部屋のゴミをまとめること）。居室には通常、洗面台の周りにふたつきの汚物入れがあり、居室にごみを入れるためのごみ箱があります。サービス時にはあふれないように、まとめる。においがするものは新聞紙などで包んでふた付きのごみ箱に捨てて下さい。",
+    "meaningEN": "Garbage collection."
+  },
+  {
+    "no": 114,
+    "term": "ゴミ出し",
+    "reading": "ごみだし",
+    "english": "Taking out garbage",
+    "meaningJP": "ゴミが袋いっぱいになった時は袋口を縛って1階のゴミ庫に出すこと（サービスの終了時に、１階のゴミ捨て場に出す）その時はエレベーターを使用せず階段を使ってください。基本スタッフは階段使用です。",
+    "meaningEN": "Taking out the garbage."
+  },
+  {
+    "no": 115,
+    "term": "洗濯",
+    "reading": "せんたく",
+    "english": "Laundry",
+    "meaningJP": "Laundry　洗濯室で各個人別の洗剤を用いて選択する。",
+    "meaningEN": "Doing laundry."
+  },
+  {
+    "no": 116,
+    "term": "乾燥",
+    "reading": "かんそう",
+    "english": "Drying",
+    "meaningJP": "5階に洗濯を干すこと（シルキーの場合）",
+    "meaningEN": "Drying."
+  },
+  {
+    "no": 117,
+    "term": "洗濯乾燥",
+    "reading": "せんたくかんそう",
+    "english": "Washing and drying",
+    "meaningJP": "選択して干したら完了",
+    "meaningEN": "Washing and drying laundry."
+  },
+  {
+    "no": 118,
+    "term": "物干し",
+    "reading": "ものほし",
+    "english": "Hanging laundry",
+    "meaningJP": "Clothesline",
+    "meaningEN": "Hanging laundry to dry."
+  },
+  {
+    "no": 119,
+    "term": "取り入れ収納",
+    "reading": "とりいれしゅうのう",
+    "english": "Taking in and storing",
+    "meaningJP": "前日の洗濯ものを取り入れ畳んであるものを利用者様のお部屋にお持ちする。",
+    "meaningEN": "Taking in dried laundry and storing it."
+  },
+  {
+    "no": 120,
+    "term": "布団干し",
+    "reading": "ふとんほし",
+    "english": "Airing futon",
+    "meaningJP": "屋上などに晴れた日に布団を干すこと",
+    "meaningEN": "Airing out the futon (Japanese bedding)."
+  },
+  {
+    "no": 121,
+    "term": "準備",
+    "reading": "じゅんび",
+    "english": "Preparation",
+    "meaningJP": "Preparation",
+    "meaningEN": "Preparation / Getting ready."
+  },
+  {
+    "no": 122,
+    "term": "デイ準備",
+    "reading": "でいじゅんび",
+    "english": "Day service preparation",
+    "meaningJP": "利用者様が次回のデイサービスに行かれるための準備。着替え、入浴セット、リハビリパンツ、パット、ビニール袋、塗り薬、服薬など",
+    "meaningEN": "Preparing for day service (adult day care)."
+  },
+  {
+    "no": 123,
+    "term": "透析",
+    "reading": "とうせき",
+    "english": "Dialysis",
+    "meaningJP": "Dialysis人工透析（じんこうとうせき）は、腎不全で腎臓の機能が著しく低下した患者に実施する医療行為（処置）の一つで、腎臓の機能を人工的に代替することである。単に透析（とうせき、英語: Dialysis）とも呼ばれる。注意が必要な症状\nからだに水分がたまる（全身のむくみ、腹水・胸水など）\n呼吸困...",
+    "meaningEN": "Dialysis (blood purification treatment for kidney disease)."
+  },
+  {
+    "no": 124,
+    "term": "通院",
+    "reading": "つういん",
+    "english": "Hospital visit",
+    "meaningJP": "病院に通うこと",
+    "meaningEN": "Going to the hospital/clinic for medical visits."
+  },
+  {
+    "no": 125,
+    "term": "シーツ交換",
+    "reading": "しーつこうかん",
+    "english": "Sheet change",
+    "meaningJP": "利用者様のベッドのカバーの交換",
+    "meaningEN": "Changing bed sheets."
+  },
+  {
+    "no": 126,
+    "term": "防水シーツ",
+    "reading": "ぼうすいしーつ",
+    "english": "Waterproof sheet",
+    "meaningJP": "失禁による防汚のために使われますが、水を通さないということは蒸れるということであり（レインコートと同じですので）、赤ちゃんならあせもなどを起こしやすくなりますし、高齢者であれば褥瘡などにつながることもあります。ベッド上を完全に覆うタイプではなく、就寝時の腰回りのみ…というタイプもありますので、状況に...",
+    "meaningEN": "Waterproof sheet (to protect mattress from accidents)."
+  },
+  {
+    "no": 127,
+    "term": "布団カバー",
+    "reading": "ふとんかばー",
+    "english": "Futon cover",
+    "meaningJP": "Futon cover　決められた洗濯日以外でも、汚れや失禁など不衛生になってないか確認する。",
+    "meaningEN": "Futon cover / Comforter cover."
+  },
+  {
+    "no": 128,
+    "term": "枕カバー",
+    "reading": "まくらかばー",
+    "english": "Pillow cover",
+    "meaningJP": "Pillow cover　　定期的に確認し交換する。",
+    "meaningEN": "Pillow cover / Pillowcase."
+  },
+  {
+    "no": 129,
+    "term": "便座カバー",
+    "reading": "べんざかばー",
+    "english": "Toilet seat cover",
+    "meaningJP": "Toilet seat cover　汚れやすいため、清潔を保つ。",
+    "meaningEN": "Toilet seat cover."
+  },
+  {
+    "no": 130,
+    "term": "ベッドメイク",
+    "reading": "べっどめいく",
+    "english": "Bed making",
+    "meaningJP": "Bed makingサービスの時は必ず、ベッドの確認をし、しわを伸ばしておく。褥瘡予防。",
+    "meaningEN": "Making the bed."
+  },
+  {
+    "no": 131,
+    "term": "ポット給水",
+    "reading": "ぽっときゅうすい",
+    "english": "Filling water pot",
+    "meaningJP": "Pot water supply　電気ポット利用をしている利用者様は必ずポットの水確認をする。空焚き（からだき）にならないように。",
+    "meaningEN": "Filling the water pot/kettle."
+  },
+  {
+    "no": 132,
+    "term": "茶葉交換",
+    "reading": "ちゃばこうかん",
+    "english": "Changing tea leaves",
+    "meaningJP": "日本のお茶の葉の入った急須のお茶に葉を交換すること。",
+    "meaningEN": "Changing/replacing tea leaves."
+  },
+  {
+    "no": 133,
+    "term": "買い物代行",
+    "reading": "かいものだいこう",
+    "english": "Shopping on behalf",
+    "meaningJP": "買い物を利用者様の代わりにいくこと。",
+    "meaningEN": "Shopping on behalf of the client."
+  },
+  {
+    "no": 134,
+    "term": "薬の受取",
+    "reading": "くすりのうけとり",
+    "english": "Picking up medication",
+    "meaningJP": "利用者さ様の代わりに薬受け取りの代行を行うこと。",
+    "meaningEN": "Picking up medication (from pharmacy)."
+  },
+  {
+    "no": 135,
+    "term": "とろみ付",
+    "reading": "とろみつき",
+    "english": "Adding thickener",
+    "meaningJP": "とろみ食は、飲み込みやすく噛みやすいように、食材にとろみ剤を加えた食事形態を指します。 食材にとろみをつけたことで、口内でゆっくりと流れ、気管へ入ることを阻止する役割を持っています。 とろみ食に向いている人は？ とろみ食は、 飲み込む力や噛む力が低下している人や嚥下障害がある人に向いています。 とろ...",
+    "meaningEN": "Adding thickener (to prevent choking for people with swallowing difficulties)."
+  },
+  {
+    "no": 136,
+    "term": "その他の生活援助",
+    "reading": "そのたのせいかつえんじょ",
+    "english": "Other daily living assistance",
+    "meaningJP": "その他の生活支援サービスは、栄養改善を目的とした配食や見守りを兼ねた配食、ボランティア等による安否確認などを行うサービスです。",
+    "meaningEN": "Other daily living assistance services."
+  },
+  {
+    "no": 137,
+    "term": "内訳",
+    "reading": "うちわけ",
+    "english": "Breakdown / Details",
+    "meaningJP": "「内」は「ある範囲の中」という意味、「訳」は「解釈する」という意味、「内訳」で」「ある範囲の中を解釈すること」になります。",
+    "meaningEN": "Breakdown / Itemized details."
+  },
+  {
+    "no": 138,
+    "term": "連絡事項",
+    "reading": "れんらくじこう",
+    "english": "Notes / Communication items",
+    "meaningJP": "お知らせをするためのことがら",
+    "meaningEN": "Notes / Items to communicate / Things to report."
+  },
+  {
+    "no": 139,
+    "term": "確認印",
+    "reading": "かくにんいん",
+    "english": "Confirmation stamp",
+    "meaningJP": "自分で確認をして印鑑をおすところ",
+    "meaningEN": "Confirmation stamp / Signature to verify."
+  },
+  {
+    "no": 140,
+    "term": "食事介助",
+    "reading": "しょくじかいじょ",
+    "english": "Meal assistance",
+    "meaningJP": "食事介助とは、ひとりでうまく食事ができない方のために介助を行うことを言います。食事介助には、摂食介助だけでなく、利用者の食前・食事・食後の食事環境をサポートすることまで含まれています。また、楽しく食事できるように声掛けを行うことも介護士の重要な役割です。食事の準備・調理・配膳/摂食介助/下膳・後片付...",
+    "meaningEN": "Assisting with meals."
+  },
+  {
+    "no": 141,
+    "term": "よめるようになりましょう",
+    "reading": "",
+    "english": "Let's learn to read!",
+    "meaningJP": "",
+    "meaningEN": "Let's practice reading these terms!"
+  }
+];
+        
+        // Week ranges
+        const weekRanges = {
+            1: [1, 21],
+            2: [22, 43],
+            3: [44, 63],
+            4: [64, 80],
+            5: [81, 98],
+            6: [99, 115],
+            7: [116, 141]
+        };
+        
+        // Google Apps Script Web App URL
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxlyjRFtMQkimgniMMkhv8rBlwxWXdLLrSV3LzL8z1IDwgZEB_S9P51hgpMMhYRR2Sxrg/exec';
+        
+        // Quiz state
+        let currentQuiz = {
+            terms: [],
+            currentIndex: 0,
+            correctCount: 0,
+            wrongAnswers: [],
+            startTime: null,
+            userName: '',
+            week: 1
+        };
+        
+        let timerInterval = null;
+        
+        function getTermsForWeek(week) {
+            if (week === 'all') {
+                return [...allTerms];
+            }
+            const [start, end] = weekRanges[parseInt(week)];
+            return allTerms.filter(term => term.no >= start && term.no <= end);
+        }
+        
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+        
+        function startQuiz() {
+            const userName = document.getElementById('userName').value.trim();
+            if (!userName) {
+                alert('お名前を入力してください / Please enter your name');
+                return;
+            }
+            
+            const week = document.getElementById('weekSelect').value;
+            const countSelect = document.getElementById('questionCount').value;
+            
+            let availableTerms = getTermsForWeek(week);
+            let questionCount = countSelect === 'all' ? availableTerms.length : parseInt(countSelect);
+            questionCount = Math.min(questionCount, availableTerms.length);
+            
+            // Shuffle and select terms
+            const shuffledTerms = shuffleArray(availableTerms);
+            currentQuiz = {
+                terms: shuffledTerms.slice(0, questionCount),
+                currentIndex: 0,
+                correctCount: 0,
+                wrongAnswers: [],
+                startTime: Date.now(),
+                userName: userName,
+                week: week
+            };
+            
+            document.getElementById('setupScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.remove('hidden');
+            
+            startTimer();
+            showQuestion();
+        }
+        
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - currentQuiz.startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                document.getElementById('timer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+        
+        function showQuestion() {
+            const term = currentQuiz.terms[currentQuiz.currentIndex];
+            const total = currentQuiz.terms.length;
+            
+            document.getElementById('progressText').textContent = 
+                `問題 ${currentQuiz.currentIndex + 1} / ${total}`;
+            document.getElementById('progressBar').style.width = 
+                `${((currentQuiz.currentIndex) / total) * 100}%`;
+            
+            document.getElementById('questionTerm').textContent = term.term;
+            document.getElementById('questionReading').textContent = term.reading;
+            
+            // Generate options (1 correct + 3 wrong)
+            const correctAnswer = term.meaningJP;
+            let wrongAnswers = allTerms
+                .filter(t => t.no !== term.no)
+                .map(t => t.meaningJP)
+                .filter(m => m && m !== correctAnswer);
+            
+            wrongAnswers = shuffleArray(wrongAnswers).slice(0, 3);
+            const options = shuffleArray([correctAnswer, ...wrongAnswers]);
+            
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = options.map((opt, i) => `
+                <button class="option-btn" onclick="selectAnswer(this, '${escapeHtml(opt)}', '${escapeHtml(correctAnswer)}')">
+                    ${opt}
+                </button>
+            `).join('');
+        }
+        
+        function escapeHtml(text) {
+            return text.replace(/'/g, "\\'").replace(/"/g, '\\"');
+        }
+        
+        function selectAnswer(button, selected, correct) {
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(btn => btn.classList.add('disabled'));
+            
+            const term = currentQuiz.terms[currentQuiz.currentIndex];
+            
+            if (selected === correct) {
+                button.classList.add('correct');
+                currentQuiz.correctCount++;
+            } else {
+                button.classList.add('incorrect');
+                buttons.forEach(btn => {
+                    if (btn.textContent.trim() === correct) {
+                        btn.classList.add('correct');
+                    }
+                });
+                currentQuiz.wrongAnswers.push({
+                    term: term.term,
+                    reading: term.reading,
+                    meaning: term.meaningJP,
+                    english: term.english
+                });
+            }
+            
+            setTimeout(() => {
+                currentQuiz.currentIndex++;
+                if (currentQuiz.currentIndex < currentQuiz.terms.length) {
+                    showQuestion();
+                } else {
+                    showResult();
+                }
+            }, 1000);
+        }
+        
+        function showResult() {
+            clearInterval(timerInterval);
+            
+            const total = currentQuiz.terms.length;
+            const correct = currentQuiz.correctCount;
+            const score = Math.round((correct / total) * 100);
+            const elapsed = Math.floor((Date.now() - currentQuiz.startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.remove('hidden');
+            
+            document.getElementById('scoreNumber').textContent = `${score}%`;
+            document.getElementById('correctCount').textContent = correct;
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('timeSpent').textContent = timeString;
+            
+            const scoreCircle = document.getElementById('scoreCircle');
+            const resultStatus = document.getElementById('resultStatus');
+            
+            scoreCircle.className = 'score-circle';
+            resultStatus.className = 'result-status';
+            
+            let judgment;
+            if (score >= 80) {
+                scoreCircle.classList.add('pass');
+                resultStatus.classList.add('pass');
+                resultStatus.textContent = '🎉 合格 / PASS!';
+                judgment = '合格';
+            } else if (score >= 60) {
+                scoreCircle.classList.add('review');
+                resultStatus.classList.add('review');
+                resultStatus.textContent = '📚 要復習 / Review Needed';
+                judgment = '要復習';
+            } else {
+                scoreCircle.classList.add('fail');
+                resultStatus.classList.add('fail');
+                resultStatus.textContent = '📖 再学習 / Study More';
+                judgment = '再学習';
+            }
+            
+            // Show wrong answers
+            const wrongSection = document.getElementById('wrongAnswersSection');
+            const wrongList = document.getElementById('wrongAnswersList');
+            
+            if (currentQuiz.wrongAnswers.length > 0) {
+                wrongSection.classList.remove('hidden');
+                wrongList.innerHTML = currentQuiz.wrongAnswers.map(item => `
+                    <div class="wrong-item">
+                        <div class="wrong-term">${item.term} (${item.reading})</div>
+                        <div class="wrong-meaning">${item.meaning}</div>
+                    </div>
+                `).join('');
+            } else {
+                wrongSection.classList.add('hidden');
+            }
+            
+            // Send results to Google Spreadsheet
+            sendResults({
+                name: currentQuiz.userName,
+                week: currentQuiz.week === 'all' ? '全週' : `Week ${currentQuiz.week}`,
+                totalQuestions: total,
+                correctCount: correct,
+                score: score,
+                timeTaken: timeString,
+                wrongAnswers: currentQuiz.wrongAnswers.map(w => w.term),
+                testDate: new Date().toLocaleDateString('ja-JP'),
+                device: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? 'Mobile' : 'PC'
+            });
+        }
+        
+        async function sendResults(data) {
+            const statusEl = document.getElementById('sendingStatus');
+            statusEl.classList.remove('hidden');
+            
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                statusEl.textContent = '✅ 結果を送信しました / Results sent!';
+                statusEl.style.background = '#e8f5e9';
+                statusEl.style.color = '#2e7d32';
+            } catch (error) {
+                console.error('Error sending results:', error);
+                statusEl.textContent = '⚠️ 送信できませんでした / Could not send results';
+                statusEl.style.background = '#fff3e0';
+                statusEl.style.color = '#e65100';
+            }
+            
+            setTimeout(() => {
+                statusEl.classList.add('hidden');
+            }, 3000);
+        }
+        
+        function restartQuiz() {
+            document.getElementById('resultScreen').classList.add('hidden');
+            startQuiz();
+        }
+        
+        function backToSetup() {
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('setupScreen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
