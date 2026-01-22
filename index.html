@@ -355,17 +355,67 @@
             body {
                 padding: 10px;
             }
-            
+
             .header h1 {
                 font-size: 1.3em;
             }
-            
+
             .question-term {
                 font-size: 1.6em;
             }
-            
+
             .result-stats {
                 grid-template-columns: 1fr;
+            }
+
+            /* モバイル最適化：選択肢をコンパクトに */
+            .option-btn {
+                padding: 12px 15px;
+            }
+
+            .option-jp {
+                font-size: 13px;
+            }
+
+            .option-en {
+                font-size: 11px;
+            }
+
+            .options {
+                gap: 10px;
+            }
+
+            .content {
+                padding: 15px;
+            }
+
+            .question-card {
+                padding: 18px;
+                margin-bottom: 15px;
+            }
+
+            .btn {
+                padding: 12px;
+                font-size: 16px;
+            }
+        }
+
+        /* さらに小さい画面用 */
+        @media (max-width: 360px) {
+            .option-jp {
+                font-size: 12px;
+            }
+
+            .option-en {
+                font-size: 10px;
+            }
+
+            .question-term {
+                font-size: 1.4em;
+            }
+
+            .question-reading {
+                font-size: 1em;
             }
         }
     </style>
@@ -473,6 +523,9 @@
                     <button class="btn btn-primary" onclick="restartQuiz()">
                         🔄 もう一度テスト / Try Again
                     </button>
+                    <button id="reviewModeBtn" class="btn btn-secondary hidden" onclick="startReviewMode()">
+                        📝 間違えた問題を復習 / Review Wrong Answers
+                    </button>
                     <button class="btn btn-secondary" onclick="backToSetup()">
                         ⬅️ 設定に戻る / Back to Setup
                     </button>
@@ -482,6 +535,9 @@
     </div>
 
     <script>
+        // 連打防止フラグ
+        let isProcessing = false;
+
         // All 141 care terminology items
         const allTerms = [
   {
@@ -550,8 +606,8 @@
   },
   {
     "no": 9,
-    "term": "45750",
-    "reading": "",
+    "term": "年（ねん）",
+    "reading": "2025ねん / れいわ7ねん",
     "english": "Year format (Japanese calendar)",
     "meaningJP": "西暦（せいれき）または令和7年と記名（めいき）する",
     "meaningEN": "Write using Western calendar (e.g., 2025) or Japanese era (Reiwa 7)."
@@ -1686,10 +1742,32 @@
             
             document.getElementById('setupScreen').classList.add('hidden');
             document.getElementById('quizScreen').classList.remove('hidden');
-            
+
+            // ブラウザ履歴にクイズ開始状態を追加（戻るボタン対策）
+            history.pushState({ quizStarted: true }, '', '');
+
             startTimer();
             showQuestion();
         }
+
+        // ブラウザの戻るボタン対策
+        window.addEventListener('popstate', function(event) {
+            if (currentQuiz && currentQuiz.terms && currentQuiz.currentIndex < currentQuiz.terms.length) {
+                // クイズ中に戻るボタンが押された場合
+                const confirmLeave = confirm('クイズを中断しますか？\nDo you want to quit the quiz?\n\n進捗は保存されません。\nYour progress will not be saved.');
+                if (confirmLeave) {
+                    // クイズを終了して設定画面に戻る
+                    clearInterval(timerInterval);
+                    isProcessing = false;
+                    document.getElementById('quizScreen').classList.add('hidden');
+                    document.getElementById('resultScreen').classList.add('hidden');
+                    document.getElementById('setupScreen').classList.remove('hidden');
+                } else {
+                    // キャンセルされた場合は履歴を再度追加して戻るボタンを無効化
+                    history.pushState({ quizStarted: true }, '', '');
+                }
+            }
+        });
         
         function startTimer() {
             timerInterval = setInterval(() => {
@@ -1750,7 +1828,7 @@
             44: "お風呂に入る手つだい",
             45: "体ぜんぶをお湯に入れること",
             46: "シャワーだけで洗うこと",
-            47: "手をお湯で洗うこと",
+            47: "手だけをお湯で洗うケア",
             48: "足をお湯で洗うこと",
             49: "かみを洗うこと",
             50: "耳をそうじすること",
@@ -1760,10 +1838,10 @@
             54: "タオルで体をふくこと",
             55: "タオルで体ぜんぶをふくこと",
             56: "顔",
-            57: "手をお湯で洗うこと",
+            57: "手の清けつをたもつこと",
             58: "首",
             59: "頭",
-            60: "その他",
+            60: "上にないもの（入よく）",
             61: "顔を洗うこと",
             62: "口の中",
             63: "口の中をきれいにすること",
@@ -1772,15 +1850,15 @@
             66: "服",
             67: "服を着たりぬいだりすること",
             68: "服を着がえること",
-            69: "ごはんを食べる手つだい",
+            69: "食事のときの手つだい全体",
             70: "少しだけごはんの手つだい",
             71: "ぜんぶごはんの手つだい",
             72: "ぜんぶ食べた",
             73: "のこした",
             74: "少しだけ食べた（20%）",
             75: "水やお茶を飲むこと",
-            76: "薬を飲む手つだい",
-            77: "薬を飲む手つだい",
+            76: "薬を飲むための手つだい",
+            77: "薬をのむ時のかんり",
             78: "目ぐすりをさすこと",
             79: "シップをはる手つだい",
             80: "ぬり薬をぬる手つだい",
@@ -1795,8 +1873,8 @@
             89: "ベッドから車いすにうつること",
             90: "外に出る手つだい",
             91: "買い物",
-            92: "病院に行くこと",
-            93: "その他",
+            92: "外出して病院に行くこと",
+            93: "上にないもの（外出）",
             94: "りょうりを作ること",
             95: "ごはんを持って行くこと",
             96: "食べおわった皿をかたづけること",
@@ -1827,7 +1905,7 @@
             121: "じゅんびすること",
             122: "デイサービスに行くじゅんび",
             123: "血えきをきれいにするちりょう",
-            124: "病院に行くこと",
+            124: "とうせきで病院に行くこと",
             125: "シーツをかえること",
             126: "水をとおさないシーツ",
             127: "ふとんのカバー",
@@ -1843,7 +1921,7 @@
             137: "ないようのくわしいせつめい",
             138: "お知らせすること",
             139: "たしかめたサイン",
-            140: "ごはんを食べる手つだい",
+            140: "食べ物を口に運ぶ手つだい",
             141: "読めるようになりましょう！"
         };
 
@@ -1859,7 +1937,7 @@
             document.getElementById('progressText').textContent =
                 `問題 ${currentQuiz.currentIndex + 1} / ${total}`;
             document.getElementById('progressBar').style.width =
-                `${((currentQuiz.currentIndex) / total) * 100}%`;
+                `${((currentQuiz.currentIndex + 1) / total) * 100}%`;
 
             document.getElementById('questionTerm').textContent = term.term;
             document.getElementById('questionReading').textContent = term.reading;
@@ -1892,12 +1970,17 @@
         }
         
         function selectAnswer(button, selectedNo, correctNo) {
+            // 連打防止：処理中なら無視
+            if (isProcessing) return;
+            isProcessing = true;
+
             const buttons = document.querySelectorAll('.option-btn');
             buttons.forEach(btn => btn.classList.add('disabled'));
 
             const term = currentQuiz.terms[currentQuiz.currentIndex];
+            const isCorrect = selectedNo === correctNo;
 
-            if (selectedNo === correctNo) {
+            if (isCorrect) {
                 button.classList.add('correct');
                 currentQuiz.correctCount++;
             } else {
@@ -1913,18 +1996,23 @@
                     term: term.term,
                     reading: term.reading,
                     meaning: getN4Meaning(term.no),
-                    english: term.meaningEN
+                    english: term.meaningEN,
+                    no: term.no
                 });
             }
-            
+
+            // 不正解時は長めに表示（2.5秒）、正解時は短め（1秒）
+            const delay = isCorrect ? 1000 : 2500;
+
             setTimeout(() => {
                 currentQuiz.currentIndex++;
+                isProcessing = false; // 次の問題に進む前にフラグをリセット
                 if (currentQuiz.currentIndex < currentQuiz.terms.length) {
                     showQuestion();
                 } else {
                     showResult();
                 }
-            }, 1000);
+            }, delay);
         }
         
         function showResult() {
@@ -1973,7 +2061,8 @@
             // Show wrong answers
             const wrongSection = document.getElementById('wrongAnswersSection');
             const wrongList = document.getElementById('wrongAnswersList');
-            
+            const reviewBtn = document.getElementById('reviewModeBtn');
+
             if (currentQuiz.wrongAnswers.length > 0) {
                 wrongSection.classList.remove('hidden');
                 wrongList.innerHTML = currentQuiz.wrongAnswers.map(item => `
@@ -1982,8 +2071,11 @@
                         <div class="wrong-meaning">${item.meaning}</div>
                     </div>
                 `).join('');
+                // 復習ボタンを表示
+                reviewBtn.classList.remove('hidden');
             } else {
                 wrongSection.classList.add('hidden');
+                reviewBtn.classList.add('hidden');
             }
             
             // Send results to Google Spreadsheet
@@ -2033,7 +2125,45 @@
             document.getElementById('resultScreen').classList.add('hidden');
             startQuiz();
         }
-        
+
+        // 復習モード：間違えた問題だけを再テスト
+        function startReviewMode() {
+            if (!currentQuiz || !currentQuiz.wrongAnswers || currentQuiz.wrongAnswers.length === 0) {
+                alert('復習する問題がありません。\nNo questions to review.');
+                return;
+            }
+
+            // 間違えた問題のterm noからallTermsを取得
+            const wrongTermNos = currentQuiz.wrongAnswers.map(w => w.no);
+            const reviewTerms = allTerms.filter(t => wrongTermNos.includes(t.no));
+
+            if (reviewTerms.length === 0) {
+                alert('復習する問題がありません。\nNo questions to review.');
+                return;
+            }
+
+            // シャッフルして復習用のクイズを作成
+            currentQuiz = {
+                terms: shuffleArray(reviewTerms),
+                currentIndex: 0,
+                correctCount: 0,
+                wrongAnswers: [],
+                startTime: Date.now(),
+                userName: currentQuiz.userName,
+                week: '復習モード',
+                isReviewMode: true
+            };
+
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.remove('hidden');
+
+            // ブラウザ履歴にクイズ開始状態を追加
+            history.pushState({ quizStarted: true }, '', '');
+
+            startTimer();
+            showQuestion();
+        }
+
         function backToSetup() {
             document.getElementById('resultScreen').classList.add('hidden');
             document.getElementById('setupScreen').classList.remove('hidden');
