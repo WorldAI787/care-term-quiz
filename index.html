@@ -1992,7 +1992,7 @@
             const currentWeek = getWeekForNo(term.no);
             const similarNos = getSimilarNos(term.no);
 
-            // 不正解の選択肢を取得（優先順位：類似 > 同じ週 > その他）
+            // 不正解の選択肢を取得（優先順位：同じ週の類似 > 同じ週 > 他の週の類似 > その他）
             let wrongOptions = [];
             const availableTerms = allTerms
                 .filter(t => t.no !== term.no && getN4Meaning(t.no) && t.meaningEN)
@@ -2004,23 +2004,32 @@
                     isSimilar: similarNos.includes(t.no)
                 }));
 
-            // 1. まず類似用語から選ぶ（最大2つ）
-            const similarOptions = shuffleArray(availableTerms.filter(t => t.isSimilar)).slice(0, 2);
-            wrongOptions.push(...similarOptions);
+            // 同じ週の用語
+            const sameWeekTerms = availableTerms.filter(t => t.week === currentWeek);
+            // 同じ週の類似用語
+            const sameWeekSimilar = sameWeekTerms.filter(t => t.isSimilar);
+            // 同じ週の非類似用語
+            const sameWeekOther = sameWeekTerms.filter(t => !t.isSimilar);
 
-            // 2. 次に同じ週の用語から選ぶ（足りない分）
-            const sameWeekOptions = shuffleArray(
-                availableTerms.filter(t => t.week === currentWeek && !similarNos.includes(t.no))
-            ).slice(0, 4 - wrongOptions.length);
-            wrongOptions.push(...sameWeekOptions);
+            // 1. まず同じ週の類似用語から選ぶ（最大2つ）
+            wrongOptions.push(...shuffleArray(sameWeekSimilar).slice(0, 2));
 
-            // 3. まだ足りなければ他の用語から選ぶ
+            // 2. 次に同じ週の他の用語で4つまで埋める
+            const usedNos1 = new Set(wrongOptions.map(o => o.no));
+            wrongOptions.push(...shuffleArray(sameWeekOther.filter(t => !usedNos1.has(t.no))).slice(0, 4 - wrongOptions.length));
+
+            // 3. まだ足りなければ他の週の類似用語を追加
             if (wrongOptions.length < 4) {
-                const usedNos = wrongOptions.map(o => o.no);
-                const otherOptions = shuffleArray(
-                    availableTerms.filter(t => !usedNos.includes(t.no))
-                ).slice(0, 4 - wrongOptions.length);
-                wrongOptions.push(...otherOptions);
+                const usedNos2 = new Set(wrongOptions.map(o => o.no));
+                const otherWeekSimilar = availableTerms.filter(t => t.isSimilar && t.week !== currentWeek && !usedNos2.has(t.no));
+                wrongOptions.push(...shuffleArray(otherWeekSimilar).slice(0, 4 - wrongOptions.length));
+            }
+
+            // 4. まだ足りなければランダムに追加
+            if (wrongOptions.length < 4) {
+                const usedNos3 = new Set(wrongOptions.map(o => o.no));
+                const remaining = availableTerms.filter(t => !usedNos3.has(t.no));
+                wrongOptions.push(...shuffleArray(remaining).slice(0, 4 - wrongOptions.length));
             }
 
             wrongOptions = wrongOptions.slice(0, 4);
