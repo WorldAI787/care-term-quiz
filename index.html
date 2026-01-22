@@ -1690,14 +1690,14 @@
             document.getElementById('questionTerm').textContent = term.term;
             document.getElementById('questionReading').textContent = term.reading;
             
-            // Generate options (1 correct + 3 wrong)
+            // Generate options (1 correct + 4 wrong) - 5択形式（介護福祉士試験形式）
             const correctAnswer = term.meaningJP;
             let wrongAnswers = allTerms
                 .filter(t => t.no !== term.no)
                 .map(t => t.meaningJP)
                 .filter(m => m && m !== correctAnswer);
-            
-            wrongAnswers = shuffleArray(wrongAnswers).slice(0, 3);
+
+            wrongAnswers = shuffleArray(wrongAnswers).slice(0, 4);
             const options = shuffleArray([correctAnswer, ...wrongAnswers]);
             
             const container = document.getElementById('optionsContainer');
