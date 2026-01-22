@@ -1947,12 +1947,83 @@
             const correctN4 = getN4Meaning(term.no);
             const correctEnglish = term.meaningEN;
 
-            // 不正解の選択肢を取得（N4日本語と英語のペア）
-            let wrongOptions = allTerms
-                .filter(t => t.no !== term.no && getN4Meaning(t.no) && t.meaningEN)
-                .map(t => ({ no: t.no, n4: getN4Meaning(t.no), en: t.meaningEN }));
+            // 週の範囲を定義
+            const weekRanges = {
+                1: [1, 21],    // 基本・サービス
+                2: [22, 43],   // バイタル・排泄
+                3: [44, 63],   // 入浴・清潔
+                4: [64, 80],   // 身だしなみ・食事
+                5: [81, 98],   // 服薬・移動
+                6: [99, 115],  // 掃除・環境
+                7: [116, 141]  // 洗濯・その他
+            };
 
-            wrongOptions = shuffleArray(wrongOptions).slice(0, 4);
+            // 類似カテゴリのグループ（紛らわしい用語同士）
+            const similarGroups = [
+                [47, 57, 48, 53],           // 手浴、手洗い、足浴、清拭関連
+                [44, 45, 46, 50, 51],       // 入浴関連（入浴、全身浴、部分浴など）
+                [69, 70, 71, 72, 140],      // 食事介助関連
+                [76, 77, 78],               // 服薬関連
+                [81, 82, 83, 84, 85],       // 移動・移乗関連
+                [22, 23, 24, 25, 26, 27],   // バイタル関連
+                [33, 34, 35, 36, 37],       // 排泄関連
+                [99, 100, 101, 102],        // 掃除関連
+                [116, 117, 118, 119, 120],  // 洗濯関連
+                [92, 93, 124],              // 外出・通院関連
+                [60, 61, 62, 63]            // 口腔ケア関連
+            ];
+
+            // 現在の用語が属する週を特定
+            function getWeekForNo(no) {
+                for (const [week, [start, end]] of Object.entries(weekRanges)) {
+                    if (no >= start && no <= end) return parseInt(week);
+                }
+                return null;
+            }
+
+            // 類似グループを取得
+            function getSimilarNos(no) {
+                for (const group of similarGroups) {
+                    if (group.includes(no)) return group.filter(n => n !== no);
+                }
+                return [];
+            }
+
+            const currentWeek = getWeekForNo(term.no);
+            const similarNos = getSimilarNos(term.no);
+
+            // 不正解の選択肢を取得（優先順位：類似 > 同じ週 > その他）
+            let wrongOptions = [];
+            const availableTerms = allTerms
+                .filter(t => t.no !== term.no && getN4Meaning(t.no) && t.meaningEN)
+                .map(t => ({
+                    no: t.no,
+                    n4: getN4Meaning(t.no),
+                    en: t.meaningEN,
+                    week: getWeekForNo(t.no),
+                    isSimilar: similarNos.includes(t.no)
+                }));
+
+            // 1. まず類似用語から選ぶ（最大2つ）
+            const similarOptions = shuffleArray(availableTerms.filter(t => t.isSimilar)).slice(0, 2);
+            wrongOptions.push(...similarOptions);
+
+            // 2. 次に同じ週の用語から選ぶ（足りない分）
+            const sameWeekOptions = shuffleArray(
+                availableTerms.filter(t => t.week === currentWeek && !similarNos.includes(t.no))
+            ).slice(0, 4 - wrongOptions.length);
+            wrongOptions.push(...sameWeekOptions);
+
+            // 3. まだ足りなければ他の用語から選ぶ
+            if (wrongOptions.length < 4) {
+                const usedNos = wrongOptions.map(o => o.no);
+                const otherOptions = shuffleArray(
+                    availableTerms.filter(t => !usedNos.includes(t.no))
+                ).slice(0, 4 - wrongOptions.length);
+                wrongOptions.push(...otherOptions);
+            }
+
+            wrongOptions = wrongOptions.slice(0, 4);
 
             // 正解と不正解を混ぜる
             const allOptions = shuffleArray([
