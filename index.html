@@ -1701,18 +1701,154 @@
             }, 1000);
         }
         
-        // やさしい日本語に変換する関数（N4レベル対応）
-        function simplifyJapanese(text) {
-            if (!text) return '';
-            // 長い文章は最初の100文字+...に短縮
-            let simplified = text.length > 100 ? text.substring(0, 100) + '...' : text;
-            return simplified;
-        }
+        // N4レベルのやさしい日本語（ひらがな多め）
+        const n4Meanings = {
+            1: "サービスをじっさいにすること",
+            2: "かいたものをのこすこと",
+            3: "かいしゃのなまえ",
+            4: "くにがみとめたかいごのかいしゃ",
+            5: "くまもとのかいしゃのなまえ",
+            6: "つかうひとのなまえ",
+            7: "サービスをするひとのなまえ",
+            8: "サービスをするひとひ",
+            9: "2025ねん、れいわ7ねん",
+            10: "げつようび、かようび...",
+            11: "いえにいってかいごをするサービス",
+            12: "からだにさわってするかいご",
+            13: "そうじやせんたくなどのてつだい",
+            14: "おなじたてもの",
+            15: "おかねがへること",
+            16: "かいごのほけん（おかねのたすけ）",
+            17: "ほけんがつかえない",
+            18: "おかねがふえること",
+            19: "いっしょにいくこと",
+            20: "べんきょうすること",
+            21: "かいごサービスのリーダー",
+            22: "たいおん、けつあつなどをはかること",
+            23: "ちのあつさ",
+            24: "しんぞうのうごき（1ぷんに60〜100かい）",
+            25: "からだのおんど（36〜37ど）",
+            26: "トイレにつれていくこと",
+            27: "トイレにいくようにいうこと",
+            28: "トイレのてつだい",
+            29: "おしっこやうんちをするところ",
+            30: "へやでつかうトイレ",
+            31: "おしっこをいれるもの",
+            32: "おしっこをすること",
+            33: "うんちをすること",
+            34: "ある",
+            35: "ない",
+            36: "あかちゃんやおとしよりがつけるもの",
+            37: "パンツのようなおむつ",
+            38: "あたらしいものにかえること",
+            39: "おむつをあたらしいものにかえる",
+            40: "おむつがよごれていないかみること",
+            41: "きれいにしておくこと",
+            42: "おしっこパッドをかえること",
+            43: "おしっこパッドをつけること",
+            44: "おふろにはいるてつだい",
+            45: "からだぜんぶをおゆにいれること",
+            46: "シャワーだけであらうこと",
+            47: "てをおゆであらうこと",
+            48: "あしをおゆであらうこと",
+            49: "かみをあらうこと",
+            50: "みみをそうじすること",
+            51: "つめをきること",
+            52: "プライベートなところをあらうこと",
+            53: "おしりをあらうこと",
+            54: "タオルでからだをふくこと",
+            55: "タオルでからだぜんぶをふくこと",
+            56: "かお",
+            57: "てをおゆであらうこと",
+            58: "くび",
+            59: "あたま",
+            60: "そのほか",
+            61: "かおをあらうこと",
+            62: "くちのなか",
+            63: "くちのなかをきれいにすること",
+            64: "かみをきれいにすること",
+            65: "ひげをそること",
+            66: "ふく",
+            67: "ふくをきたりぬいだりすること",
+            68: "ふくをきがえること",
+            69: "ごはんをたべるてつだい",
+            70: "すこしだけごはんのてつだい",
+            71: "ぜんぶごはんのてつだい",
+            72: "ぜんぶたべた",
+            73: "のこした",
+            74: "すこしだけたべた（20%）",
+            75: "みずやおちゃをのむこと",
+            76: "くすりをのむてつだい",
+            77: "くすりをのむてつだい",
+            78: "めぐすりをさすこと",
+            79: "シップをはるてつだい",
+            80: "ぬりぐすりをぬるてつだい",
+            81: "くすりをすいこむこと",
+            82: "みみにくすりをいれること",
+            83: "はなにくすりをいれること",
+            84: "くすりをのんだかたしかめること",
+            85: "うごくてつだい",
+            86: "からだのいち",
+            87: "かえること",
+            88: "からだのいちをかえること",
+            89: "ベッドからくるまいすにうつること",
+            90: "そとにでるてつだい",
+            91: "かいもの",
+            92: "びょういんにいくこと",
+            93: "そのほか",
+            94: "りょうりをつくること",
+            95: "ごはんをもっていくこと",
+            96: "たべおわったさらをかたづけること",
+            97: "かたづけること",
+            98: "まどをあけてくうきをいれかえること",
+            99: "まわりのじょうたい",
+            100: "きれいにととのえること",
+            101: "へやをきれいにすること",
+            102: "いれば",
+            103: "あらうこと",
+            104: "いればをあらうこと",
+            105: "いればをみずにつけておくこと",
+            106: "そうじすること",
+            107: "すんでいるへや",
+            108: "ねるへや",
+            109: "いりぐち",
+            110: "りょうりをするところ",
+            111: "おふろ",
+            112: "かおをあらうところ",
+            113: "ゴミをあつめること",
+            114: "ゴミをすてにいくこと",
+            115: "ふくをあらうこと",
+            116: "かわかすこと",
+            117: "せんたくしてかわかすこと",
+            118: "せんたくものをほすこと",
+            119: "せんたくものをしまうこと",
+            120: "ふとんをそとにほすこと",
+            121: "じゅんびすること",
+            122: "デイサービスにいくじゅんび",
+            123: "けつえきをきれいにするちりょう",
+            124: "びょういんにいくこと",
+            125: "シーツをかえること",
+            126: "みずをとおさないシーツ",
+            127: "ふとんのカバー",
+            128: "まくらのカバー",
+            129: "トイレのざぶとん",
+            130: "ベッドをきれいにすること",
+            131: "ポットにみずをいれること",
+            132: "おちゃのはをかえること",
+            133: "かわりにかいものにいくこと",
+            134: "くすりをとりにいくこと",
+            135: "のみものにとろみをつけること",
+            136: "そのほかのせいかつのてつだい",
+            137: "ないようのくわしいせつめい",
+            138: "おしらせすること",
+            139: "たしかめたサイン",
+            140: "ごはんをたべるてつだい",
+            141: "よめるようになりましょう！"
+        };
 
-        // 用語から英語の意味を取得
-        function getEnglishMeaning(meaningJP) {
-            const term = allTerms.find(t => t.meaningJP === meaningJP);
-            return term ? term.meaningEN : '';
+        // N4レベルのやさしい日本語を取得
+        function getN4Meaning(termNo) {
+            return n4Meanings[termNo] || '';
         }
 
         function showQuestion() {
@@ -1728,56 +1864,55 @@
             document.getElementById('questionReading').textContent = term.reading;
 
             // Generate options (1 correct + 4 wrong) - 5択形式（介護福祉士試験形式）
-            const correctAnswer = term.meaningJP;
+            // N4レベルのやさしい日本語を使用
+            const correctN4 = getN4Meaning(term.no);
             const correctEnglish = term.meaningEN;
 
-            // 不正解の選択肢を取得（日本語と英語のペア）
+            // 不正解の選択肢を取得（N4日本語と英語のペア）
             let wrongOptions = allTerms
-                .filter(t => t.no !== term.no && t.meaningJP && t.meaningEN)
-                .map(t => ({ jp: t.meaningJP, en: t.meaningEN }));
+                .filter(t => t.no !== term.no && getN4Meaning(t.no) && t.meaningEN)
+                .map(t => ({ no: t.no, n4: getN4Meaning(t.no), en: t.meaningEN }));
 
             wrongOptions = shuffleArray(wrongOptions).slice(0, 4);
 
             // 正解と不正解を混ぜる
             const allOptions = shuffleArray([
-                { jp: correctAnswer, en: correctEnglish },
+                { no: term.no, n4: correctN4, en: correctEnglish },
                 ...wrongOptions
             ]);
 
             const container = document.getElementById('optionsContainer');
             container.innerHTML = allOptions.map((opt, i) => `
-                <button class="option-btn" onclick="selectAnswer(this, '${escapeHtml(opt.jp)}', '${escapeHtml(correctAnswer)}')">
-                    <div class="option-jp">${simplifyJapanese(opt.jp)}</div>
+                <button class="option-btn" onclick="selectAnswer(this, ${opt.no}, ${term.no})">
+                    <div class="option-jp">${opt.n4}</div>
                     <div class="option-en">${opt.en || ''}</div>
                 </button>
             `).join('');
         }
         
-        function escapeHtml(text) {
-            return text.replace(/'/g, "\\'").replace(/"/g, '\\"');
-        }
-        
-        function selectAnswer(button, selected, correct) {
+        function selectAnswer(button, selectedNo, correctNo) {
             const buttons = document.querySelectorAll('.option-btn');
             buttons.forEach(btn => btn.classList.add('disabled'));
-            
+
             const term = currentQuiz.terms[currentQuiz.currentIndex];
-            
-            if (selected === correct) {
+
+            if (selectedNo === correctNo) {
                 button.classList.add('correct');
                 currentQuiz.correctCount++;
             } else {
                 button.classList.add('incorrect');
+                // 正解のボタンを見つけてハイライト
                 buttons.forEach(btn => {
-                    if (btn.textContent.trim() === correct) {
+                    const onclickAttr = btn.getAttribute('onclick');
+                    if (onclickAttr && onclickAttr.includes(`, ${correctNo})`)) {
                         btn.classList.add('correct');
                     }
                 });
                 currentQuiz.wrongAnswers.push({
                     term: term.term,
                     reading: term.reading,
-                    meaning: term.meaningJP,
-                    english: term.english
+                    meaning: getN4Meaning(term.no),
+                    english: term.meaningEN
                 });
             }
             
