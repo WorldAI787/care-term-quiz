@@ -350,7 +350,64 @@
             margin-bottom: 15px;
             color: #1976d2;
         }
-        
+
+        /* 自信度選択 */
+        .confidence-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 12px;
+        }
+
+        .confidence-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .confidence-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .confidence-btn {
+            padding: 10px 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .confidence-btn:hover {
+            border-color: #5B86E5;
+            background: #f8f9ff;
+        }
+
+        .confidence-btn.selected {
+            border-color: #5B86E5;
+            background: #e8f0fe;
+            color: #1a73e8;
+        }
+
+        .confidence-btn .conf-jp {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .confidence-btn .conf-en {
+            font-size: 10px;
+            color: #888;
+        }
+
+        .confidence-btn.selected .conf-en {
+            color: #5B86E5;
+        }
+
         @media (max-width: 480px) {
             body {
                 padding: 10px;
@@ -484,8 +541,31 @@
                 <div class="options" id="optionsContainer">
                     <!-- Options will be inserted here -->
                 </div>
+
+                <!-- 自信度選択 -->
+                <div class="confidence-section hidden" id="confidenceSection">
+                    <div class="confidence-label">回答の自信度は？ / How confident are you?</div>
+                    <div class="confidence-buttons">
+                        <button class="confidence-btn" onclick="selectConfidence(4)">
+                            <div class="conf-jp">😊 回答に自信がある</div>
+                            <div class="conf-en">I'm confident in my answer.</div>
+                        </button>
+                        <button class="confidence-btn" onclick="selectConfidence(3)">
+                            <div class="conf-jp">🙂 回答に少し自信がある</div>
+                            <div class="conf-en">I'm somewhat confident in my answer.</div>
+                        </button>
+                        <button class="confidence-btn" onclick="selectConfidence(2)">
+                            <div class="conf-jp">😐 回答に少し自信がない</div>
+                            <div class="conf-en">I'm not very confident in my answer.</div>
+                        </button>
+                        <button class="confidence-btn" onclick="selectConfidence(1)">
+                            <div class="conf-jp">😟 回答に自信がまったくない</div>
+                            <div class="conf-en">I have no confidence in my answer.</div>
+                        </button>
+                    </div>
+                </div>
             </div>
-            
+
             <!-- Result Screen -->
             <div id="resultScreen" class="hidden">
                 <div class="result-card">
@@ -2081,18 +2161,56 @@
                 });
             }
 
-            // 不正解時は長めに表示（2.5秒）、正解時は短め（1秒）
-            const delay = isCorrect ? 1000 : 2500;
+            // 現在の回答情報を保存（自信度選択用）
+            currentQuiz.currentAnswer = {
+                termNo: term.no,
+                isCorrect: isCorrect,
+                term: term.term
+            };
 
+            // 自信度選択を表示
+            document.getElementById('confidenceSection').classList.remove('hidden');
+            // 選択状態をリセット
+            document.querySelectorAll('.confidence-btn').forEach(btn => btn.classList.remove('selected'));
+        }
+
+        // 自信度データを保存する配列を初期化
+        function initConfidenceData() {
+            if (!currentQuiz.confidenceData) {
+                currentQuiz.confidenceData = [];
+            }
+        }
+
+        // 自信度を選択
+        function selectConfidence(level) {
+            initConfidenceData();
+
+            // ボタンの選択状態を更新
+            document.querySelectorAll('.confidence-btn').forEach(btn => btn.classList.remove('selected'));
+            event.target.closest('.confidence-btn').classList.add('selected');
+
+            // 自信度データを保存
+            const answer = currentQuiz.currentAnswer;
+            currentQuiz.confidenceData.push({
+                termNo: answer.termNo,
+                term: answer.term,
+                isCorrect: answer.isCorrect,
+                confidence: level
+            });
+
+            // 自信度セクションを非表示
             setTimeout(() => {
+                document.getElementById('confidenceSection').classList.add('hidden');
+
                 currentQuiz.currentIndex++;
-                isProcessing = false; // 次の問題に進む前にフラグをリセット
+                isProcessing = false;
+
                 if (currentQuiz.currentIndex < currentQuiz.terms.length) {
                     showQuestion();
                 } else {
                     showResult();
                 }
-            }, delay);
+            }, 300);
         }
         
         function showResult() {
@@ -2159,6 +2277,18 @@
             }
             
             // Send results to Google Spreadsheet
+            // 自信度の統計を計算
+            const confData = currentQuiz.confidenceData || [];
+            const avgConfidence = confData.length > 0
+                ? (confData.reduce((sum, d) => sum + d.confidence, 0) / confData.length).toFixed(1)
+                : 'N/A';
+
+            // 自信度と正解の関係を分析
+            const confidentCorrect = confData.filter(d => d.confidence >= 3 && d.isCorrect).length;
+            const confidentWrong = confData.filter(d => d.confidence >= 3 && !d.isCorrect).length;
+            const notConfidentCorrect = confData.filter(d => d.confidence < 3 && d.isCorrect).length;
+            const notConfidentWrong = confData.filter(d => d.confidence < 3 && !d.isCorrect).length;
+
             sendResults({
                 name: currentQuiz.userName,
                 week: currentQuiz.week === 'all' ? '全週' : `Week ${currentQuiz.week}`,
@@ -2168,7 +2298,12 @@
                 timeTaken: timeString,
                 wrongAnswers: currentQuiz.wrongAnswers.map(w => w.term),
                 testDate: new Date().toLocaleDateString('ja-JP'),
-                device: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? 'Mobile' : 'PC'
+                device: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? 'Mobile' : 'PC',
+                avgConfidence: avgConfidence,
+                confidentCorrect: confidentCorrect,
+                confidentWrong: confidentWrong,
+                notConfidentCorrect: notConfidentCorrect,
+                notConfidentWrong: notConfidentWrong
             });
         }
         
