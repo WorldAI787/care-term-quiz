@@ -206,6 +206,106 @@
             opacity: 0.7;
         }
 
+        .option-btn.selected {
+            border-color: #5B86E5;
+            background: #e8f0fe;
+            box-shadow: 0 0 0 3px rgba(91, 134, 229, 0.3);
+        }
+
+        /* 確定ボタン */
+        .confirm-section {
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .btn-confirm {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #5B86E5 0%, #36D1DC 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .btn-confirm.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .btn-confirm.active:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(91, 134, 229, 0.4);
+        }
+
+        /* 解説セクション */
+        .explanation-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+            border-radius: 15px;
+            border-left: 4px solid #5B86E5;
+        }
+
+        .explanation-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #5B86E5;
+            margin-bottom: 10px;
+        }
+
+        .explanation-term {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .explanation-reading {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .explanation-meaning-jp {
+            font-size: 15px;
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .explanation-meaning-en {
+            font-size: 13px;
+            color: #5B86E5;
+            font-style: italic;
+            line-height: 1.5;
+        }
+
+        .btn-next {
+            margin-top: 15px;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-next:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4);
+        }
+
         /* N4レベル対応：日本語+英語表示 */
         .option-jp {
             font-size: 14px;
@@ -620,6 +720,22 @@
                 
                 <div class="options" id="optionsContainer">
                     <!-- Options will be inserted here -->
+                </div>
+
+                <!-- 確定ボタン -->
+                <div class="confirm-section" id="confirmSection">
+                    <button class="btn-confirm" id="confirmBtn" onclick="confirmAnswer()">
+                        ✓ 回答を確定する / Confirm Answer
+                    </button>
+                </div>
+
+                <!-- 解説セクション -->
+                <div class="explanation-section hidden" id="explanationSection">
+                    <div class="explanation-title">📖 解説 / Explanation</div>
+                    <div class="explanation-term" id="explanationTerm"></div>
+                    <div class="explanation-reading" id="explanationReading"></div>
+                    <div class="explanation-meaning-jp" id="explanationMeaningJP"></div>
+                    <div class="explanation-meaning-en" id="explanationMeaningEN"></div>
                 </div>
 
                 <!-- 自信度選択 -->
@@ -2120,9 +2236,27 @@
             return n4Meanings[termNo] || '';
         }
 
+        // 選択中の回答を保持
+        let selectedButton = null;
+        let selectedNo = null;
+        let correctNo = null;
+
         function showQuestion() {
             const term = currentQuiz.terms[currentQuiz.currentIndex];
             const total = currentQuiz.terms.length;
+
+            // 状態をリセット
+            selectedButton = null;
+            selectedNo = null;
+            correctNo = term.no;
+            isProcessing = false;
+
+            // 確定ボタンを非アクティブに
+            document.getElementById('confirmBtn').classList.remove('active');
+            // 解説セクションを非表示
+            document.getElementById('explanationSection').classList.add('hidden');
+            // 自信度セクションを非表示
+            document.getElementById('confidenceSection').classList.add('hidden');
 
             document.getElementById('progressText').textContent =
                 `問題 ${currentQuiz.currentIndex + 1} / ${total}`;
@@ -2239,22 +2373,46 @@
             `).join('');
         }
         
-        function selectAnswer(button, selectedNo, correctNo) {
-            // 連打防止：処理中なら無視
+        // 選択肢をクリックした時（確定前 - 再選択可能）
+        function selectAnswer(button, selNo, corrNo) {
+            // 確定済みなら無視
             if (isProcessing) return;
+
+            const buttons = document.querySelectorAll('.option-btn');
+
+            // 以前の選択を解除
+            buttons.forEach(btn => btn.classList.remove('selected'));
+
+            // 新しい選択を適用
+            button.classList.add('selected');
+            selectedButton = button;
+            selectedNo = selNo;
+
+            // 確定ボタンをアクティブに
+            document.getElementById('confirmBtn').classList.add('active');
+        }
+
+        // 回答を確定する
+        function confirmAnswer() {
+            if (!selectedButton || isProcessing) return;
             isProcessing = true;
 
             const buttons = document.querySelectorAll('.option-btn');
             buttons.forEach(btn => btn.classList.add('disabled'));
 
+            // 確定ボタンを非アクティブに
+            document.getElementById('confirmBtn').classList.remove('active');
+
             const term = currentQuiz.terms[currentQuiz.currentIndex];
             const isCorrect = selectedNo === correctNo;
 
             if (isCorrect) {
-                button.classList.add('correct');
+                selectedButton.classList.remove('selected');
+                selectedButton.classList.add('correct');
                 currentQuiz.correctCount++;
             } else {
-                button.classList.add('incorrect');
+                selectedButton.classList.remove('selected');
+                selectedButton.classList.add('incorrect');
                 // 正解のボタンを見つけてハイライト
                 buttons.forEach(btn => {
                     const onclickAttr = btn.getAttribute('onclick');
@@ -2272,16 +2430,16 @@
             }
 
             // 選択した回答のテキストを取得
-            const selectedText = button.querySelector('.choice-jp') ?
-                button.querySelector('.choice-jp').textContent : button.textContent.trim();
+            const selectedText = selectedButton.querySelector('.option-jp') ?
+                selectedButton.querySelector('.option-jp').textContent : selectedButton.textContent.trim();
 
             // 正解のテキストを取得
             let correctText = '';
             buttons.forEach(btn => {
                 const onclickAttr = btn.getAttribute('onclick');
                 if (onclickAttr && onclickAttr.includes(`, ${correctNo})`)) {
-                    correctText = btn.querySelector('.choice-jp') ?
-                        btn.querySelector('.choice-jp').textContent : btn.textContent.trim();
+                    correctText = btn.querySelector('.option-jp') ?
+                        btn.querySelector('.option-jp').textContent : btn.textContent.trim();
                 }
             });
 
@@ -2294,10 +2452,22 @@
                 correctAnswer: correctText
             };
 
+            // 解説を表示
+            showExplanation(term);
+
             // 自信度選択を表示
             document.getElementById('confidenceSection').classList.remove('hidden');
             // 選択状態をリセット
             document.querySelectorAll('.confidence-btn').forEach(btn => btn.classList.remove('selected'));
+        }
+
+        // 解説を表示する関数
+        function showExplanation(term) {
+            document.getElementById('explanationTerm').textContent = term.term;
+            document.getElementById('explanationReading').textContent = `（${term.reading}）`;
+            document.getElementById('explanationMeaningJP').textContent = term.meaningJP || getN4Meaning(term.no);
+            document.getElementById('explanationMeaningEN').textContent = term.meaningEN || '';
+            document.getElementById('explanationSection').classList.remove('hidden');
         }
 
         // 自信度データを保存する配列を初期化
