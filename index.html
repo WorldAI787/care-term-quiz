@@ -2245,6 +2245,9 @@
             const term = currentQuiz.terms[currentQuiz.currentIndex];
             const total = currentQuiz.terms.length;
 
+            // ページトップにスクロール（次の問題に移った時）
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
             // 状態をリセット
             selectedButton = null;
             selectedNo = null;
@@ -2459,6 +2462,11 @@
             document.getElementById('confidenceSection').classList.remove('hidden');
             // 選択状態をリセット
             document.querySelectorAll('.confidence-btn').forEach(btn => btn.classList.remove('selected'));
+
+            // 自信度セクションまで自動スクロール（ユーザーが次のアクションを認識できるように）
+            setTimeout(() => {
+                document.getElementById('confidenceSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
         }
 
         // 解説を表示する関数
