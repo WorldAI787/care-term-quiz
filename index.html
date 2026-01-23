@@ -10,7 +10,12 @@
             margin: 0;
             padding: 0;
         }
-        
+
+        html, body {
+            scroll-behavior: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
         body {
             font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -703,6 +708,8 @@
             
             <!-- Quiz Screen -->
             <div id="quizScreen" class="hidden">
+                <!-- スクロールターゲット（モバイル対応） -->
+                <div id="quizTop" style="height:1px;"></div>
                 <div class="quiz-header">
                     <span class="progress" id="progressText">問題 1 / 20</span>
                     <span class="timer" id="timer">00:00</span>
@@ -2002,7 +2009,51 @@
         };
         
         let timerInterval = null;
-        
+
+        // ========== モバイル対応スクロール関数 ==========
+        // ページトップにスクロール
+        function scrollToTop() {
+            setTimeout(() => {
+                // 方法1: quizTopアンカーを使用
+                const quizTop = document.getElementById('quizTop');
+                if (quizTop) {
+                    quizTop.scrollIntoView(true);
+                }
+                // 方法2: window.scrollTo
+                window.scrollTo(0, 0);
+                // 方法3: body/html直接操作
+                document.body.scrollTop = 0;
+                document.documentElement.scrollTop = 0;
+                // 方法4: 少し遅延してもう一度
+                setTimeout(() => {
+                    window.scrollTo(0, 0);
+                    document.body.scrollTop = 0;
+                    document.documentElement.scrollTop = 0;
+                }, 100);
+            }, 50);
+        }
+
+        // 自信度セクションにスクロール
+        function scrollToConfidence() {
+            setTimeout(() => {
+                const confidenceSection = document.getElementById('confidenceSection');
+                if (confidenceSection) {
+                    // 方法1: scrollIntoView
+                    confidenceSection.scrollIntoView({ behavior: 'auto', block: 'center' });
+                    // 方法2: 少し遅延して再度実行（モバイル用）
+                    setTimeout(() => {
+                        const rect = confidenceSection.getBoundingClientRect();
+                        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                        const targetY = scrollTop + rect.top - (window.innerHeight / 3);
+                        window.scrollTo(0, Math.max(0, targetY));
+                        document.body.scrollTop = Math.max(0, targetY);
+                        document.documentElement.scrollTop = Math.max(0, targetY);
+                    }, 100);
+                }
+            }, 200);
+        }
+        // ========== スクロール関数ここまで ==========
+
         function getTermsForWeek(week) {
             if (week === 'all') {
                 return [...allTerms];
@@ -2246,12 +2297,8 @@
             const total = currentQuiz.terms.length;
 
             // ページトップにスクロール（次の問題に移った時）
-            // モバイル対応：setTimeout で確実に実行 + フォールバック
-            setTimeout(() => {
-                window.scrollTo(0, 0);
-                document.body.scrollTop = 0;
-                document.documentElement.scrollTop = 0;
-            }, 50);
+            // モバイル対応：複数の方法を試す
+            scrollToTop();
 
             // 状態をリセット
             selectedButton = null;
@@ -2469,22 +2516,7 @@
             document.querySelectorAll('.confidence-btn').forEach(btn => btn.classList.remove('selected'));
 
             // 自信度セクションまで自動スクロール（ユーザーが次のアクションを認識できるように）
-            // モバイル対応：より長いdelayとフォールバック
-            setTimeout(() => {
-                const confidenceSection = document.getElementById('confidenceSection');
-                if (confidenceSection) {
-                    // まずscrollIntoViewを試す
-                    try {
-                        confidenceSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    } catch (e) {
-                        // フォールバック：手動でスクロール位置を計算
-                        const rect = confidenceSection.getBoundingClientRect();
-                        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                        const targetY = scrollTop + rect.top - (window.innerHeight / 2) + (rect.height / 2);
-                        window.scrollTo(0, targetY);
-                    }
-                }
-            }, 300);
+            scrollToConfidence();
         }
 
         // 解説を表示する関数
