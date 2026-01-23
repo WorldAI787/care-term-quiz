@@ -2246,7 +2246,12 @@
             const total = currentQuiz.terms.length;
 
             // ページトップにスクロール（次の問題に移った時）
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // モバイル対応：setTimeout で確実に実行 + フォールバック
+            setTimeout(() => {
+                window.scrollTo(0, 0);
+                document.body.scrollTop = 0;
+                document.documentElement.scrollTop = 0;
+            }, 50);
 
             // 状態をリセット
             selectedButton = null;
@@ -2464,9 +2469,22 @@
             document.querySelectorAll('.confidence-btn').forEach(btn => btn.classList.remove('selected'));
 
             // 自信度セクションまで自動スクロール（ユーザーが次のアクションを認識できるように）
+            // モバイル対応：より長いdelayとフォールバック
             setTimeout(() => {
-                document.getElementById('confidenceSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
+                const confidenceSection = document.getElementById('confidenceSection');
+                if (confidenceSection) {
+                    // まずscrollIntoViewを試す
+                    try {
+                        confidenceSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } catch (e) {
+                        // フォールバック：手動でスクロール位置を計算
+                        const rect = confidenceSection.getBoundingClientRect();
+                        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                        const targetY = scrollTop + rect.top - (window.innerHeight / 2) + (rect.height / 2);
+                        window.scrollTo(0, targetY);
+                    }
+                }
+            }, 300);
         }
 
         // 解説を表示する関数
